@@ -1,5 +1,5 @@
-# AI-Dotfiles-Manager
-
+# AI Dotfiles Manager
+## An easier way to manage your AI tool rules & configs
 >
 > Sick of .files folder overload and having to copy and paste tour rules, workflows & commands into different dotfile folders?
 

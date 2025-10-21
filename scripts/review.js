@@ -509,7 +509,7 @@ class CodeReviewer {
    * Determine which layer a file belongs to
    */
   getLayer(file) {
-    const relativePath = path.relative(this.srcPath, file);
+    const relativePath = path.relative(this.srcPath, file).replace(/\\/g, '/');
     if (relativePath.startsWith('domain/')) return 'domain';
     if (relativePath.startsWith('application/')) return 'application';
     if (relativePath.startsWith('infrastructure/')) return 'infrastructure';
@@ -542,7 +542,7 @@ class CodeReviewer {
    */
   addViolation(severity, file, line, code, message) {
     const violation = {
-      file: path.relative(this.projectRoot, file),
+      file: path.relative(this.projectRoot, file).replace(/\\/g, '/'),
       line,
       code,
       message,

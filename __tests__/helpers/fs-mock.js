@@ -50,17 +50,21 @@ function createMockFileSystem(structure) {
  * @returns {Object} Mock fs module
  */
 function createFsMock(fileSystem, basePath = '') {
-  // Helper to normalize paths
+  // Helper to normalize paths - handle both Unix and Windows separators
   const normalizePath = (p) => {
     if (!basePath) return p;
+    // Normalize to forward slashes for consistent comparison
+    const normalizedPath = p.replace(/\\/g, '/');
+    const normalizedBase = basePath.replace(/\\/g, '/');
+
     // Remove base path prefix if present
-    if (p.startsWith(basePath + '/')) {
-      return p.substring(basePath.length + 1);
+    if (normalizedPath.startsWith(normalizedBase + '/')) {
+      return normalizedPath.substring(normalizedBase.length + 1);
     }
-    if (p === basePath) {
+    if (normalizedPath === normalizedBase) {
       return '';
     }
-    return p;
+    return normalizedPath;
   };
 
   return {

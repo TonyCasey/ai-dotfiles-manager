@@ -27,7 +27,7 @@ describe('Language Detector', () => {
 
       // Assert
       expect(result).toBe('typescript');
-      expect(fsMock.existsSync).toHaveBeenCalledWith('/test-project/tsconfig.json');
+      expect(fsMock.existsSync).toHaveBeenCalledWith(path.join('/test-project', 'tsconfig.json'));
     });
 
     it('should detect TypeScript from package.json dependencies', () => {
