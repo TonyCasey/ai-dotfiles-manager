@@ -122,7 +122,7 @@ Global installation is the **recommended approach** because:
 ### Option 1: Direct from GitHub (Easiest)
 
 ```bash
-npm install -g git+https://github.com/tony.casey/ai-dotfiles-manager.git
+npm install -g git+https://github.com/TonyCasey/ai-dotfiles-manager.git
 
 # Or install a specific version
 npm install -g git+https://github.com/tony.casey/ai-dotfiles-manager.git#v1.1.0
