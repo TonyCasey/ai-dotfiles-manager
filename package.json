@@ -1,0 +1,58 @@
+{
+  "name": "ai-dotfiles-manager",
+  "version": "1.3.0",
+  "description": "Centralized dotfiles manager for AI coding assistants - manage configurations for Claude Code, Cursor, Kilo Code, and Roo Code across all your projects",
+  "main": "index.js",
+  "bin": {
+    "ai-dotfiles-manager": "./bin/setup.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose"
+  },
+  "keywords": [
+    "ai",
+    "dotfiles",
+    "dotfiles-manager",
+    "claude",
+    "claude-code",
+    "cursor",
+    "kilo",
+    "kilo-code",
+    "roo",
+    "roo-code",
+    "development",
+    "configuration",
+    "standards",
+    "clean-architecture",
+    "code-review",
+    "config-management"
+  ],
+  "author": "Tony Casey",
+  "license": "MIT",
+  "preferGlobal": true,
+  "files": [
+    "templates/",
+    "bin/",
+    "scripts/",
+    "README.md"
+  ],
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tony.casey/ai-dotfiles-manager"
+  }
+}
