@@ -1,0 +1,22 @@
+{
+  "rulesDirectory": ".claude/rules",
+  "commandsDirectory": ".claude/commands",
+  "workflowsDirectory": ".claude/workflows",
+  "autoLoadRules": true,
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/lib/**",
+    "**/.git/**",
+    "**/coverage/**",
+    "**/.next/**",
+    "**/.nuxt/**"
+  ],
+  "allowedCommands": [
+    "/create-repo",
+    "/create-service",
+    "/create-error",
+    "/create-tests"
+  ]
+}
