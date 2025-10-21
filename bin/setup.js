@@ -479,14 +479,15 @@ async function setupClaude(method, language) {
   // Symlink shared rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
+  const sharedResult = await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
 
   // Symlink language-specific rules
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
+  let languageResult = { usedCopy: false };
 
   if (fs.existsSync(languageRulesSource)) {
-    await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
+    languageResult = await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -500,6 +501,23 @@ async function setupClaude(method, language) {
 
   // Create README in .local directory
   createLocalReadme(rulesLocalDir, 'Claude Code');
+
+  // If we used copying instead of symlinks, create the sync script
+  if (sharedResult.usedCopy || languageResult.usedCopy) {
+    const scriptsDir = path.join(claudeDir, 'scripts');
+    if (!fs.existsSync(scriptsDir)) {
+      fs.mkdirSync(scriptsDir, { recursive: true });
+    }
+
+    const syncScriptSource = path.join(templateDir, 'scripts', 'sync-rules.js');
+    const syncScriptDest = path.join(scriptsDir, 'sync-rules.js');
+
+    if (fs.existsSync(syncScriptSource)) {
+      fs.copyFileSync(syncScriptSource, syncScriptDest);
+      console.log(chalk.blue('  ✓ Added sync-rules.js script for Windows compatibility'));
+      console.log(chalk.gray('    Run "node .claude/scripts/sync-rules.js" to update rules'));
+    }
+  }
 
   // Set up commands directory
   const commandsDir = path.join(claudeDir, 'commands');
@@ -689,7 +707,25 @@ async function setupRoo(method, language) {
   console.log(chalk.green('  ✓ Roo Code configuration set up'));
 }
 
-async function setupSymlink(source, target, name) {
+function copyDirectory(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectory(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+async function setupSymlink(source, target, name, fallbackToCopy = true) {
   // Remove existing symlink or file if it exists
   if (fs.existsSync(target)) {
     const stats = fs.lstatSync(target);
@@ -707,7 +743,7 @@ async function setupSymlink(source, target, name) {
 
       if (!replace) {
         console.log(chalk.gray(`  Skipped ${name}`));
-        return;
+        return { success: false, usedCopy: false };
       }
 
       if (stats.isDirectory()) {
@@ -746,13 +782,26 @@ async function setupSymlink(source, target, name) {
     }
 
     console.log(chalk.green(`  ✓ Created ${isWindows && isDirectory ? 'junction' : 'symlink'} for ${name} (read-only)`));
+    return { success: true, usedCopy: false };
   } catch (error) {
-    if (error.code === 'EPERM' && isWindows) {
-      console.log(chalk.red(`  ✗ Permission denied creating symlink for ${name}`));
-      console.log(chalk.yellow('  ℹ On Windows, file symlinks require administrator privileges or Developer Mode.'));
-      console.log(chalk.yellow('  ℹ Try running as administrator or enabling Developer Mode.\n'));
-      throw error;
+    if (error.code === 'EPERM' && isWindows && fallbackToCopy) {
+      console.log(chalk.yellow(`  ⚠ Permission denied creating symlink for ${name}`));
+      console.log(chalk.gray('  ℹ Falling back to copying files (Windows compatibility mode)'));
+
+      try {
+        if (isDirectory) {
+          copyDirectory(source, target);
+        } else {
+          fs.copyFileSync(source, target);
+        }
+        console.log(chalk.green(`  ✓ Copied ${name} (use sync script to update)`));
+        return { success: true, usedCopy: true };
+      } catch (copyError) {
+        console.log(chalk.red(`  ✗ Failed to copy ${name}: ${copyError.message}`));
+        throw copyError;
+      }
     } else {
+      console.log(chalk.red(`  ✗ Failed to create symlink for ${name}: ${error.message}`));
       throw error;
     }
   }

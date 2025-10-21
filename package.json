@@ -1,6 +1,6 @@
 {
   "name": "ai-dotfiles-manager",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Centralized dotfiles manager for AI coding assistants - manage configurations for Claude Code, Cursor, Kilo Code, and Roo Code across all your projects",
   "main": "index.js",
   "bin": {
@@ -37,7 +37,8 @@
     "templates/",
     "bin/",
     "scripts/",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "chalk": "^4.1.2",

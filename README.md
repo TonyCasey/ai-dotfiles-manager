@@ -197,6 +197,8 @@ Your project-specific customizations go in `.local/` directories:
 
 - **Directories**: Use junctions (no admin required) ✓
 - **Files**: Require admin privileges or Developer Mode
+- **Automatic fallback**: Files are copied when symlinks fail
+- **Sync script**: Auto-generated for keeping rules updated
 - See [Troubleshooting](#troubleshooting) for details
 
 ## Developer Workspace (.dev/)
@@ -612,7 +614,20 @@ source ~/.zshrc
 **Windows users:**
 - Directory symlinks use **junctions** (no admin required) ✓
 - File symlinks require administrator privileges or Developer Mode
+- **Automatic fallback**: If symlinks fail, files are copied automatically
+- **Sync script**: When copying is used, a `sync-rules.js` script is added to `.claude/scripts/`
 - To enable Developer Mode: Settings → Update & Security → For Developers → Developer Mode
+
+**Windows fallback mode:**
+```bash
+# When symlinks fail, update copied rules with:
+node .claude/scripts/sync-rules.js
+
+# Or add to your package.json:
+"scripts": {
+  "sync-claude-rules": "node .claude/scripts/sync-rules.js"
+}
+```
 
 **Mac/Linux users:**
 ```bash
