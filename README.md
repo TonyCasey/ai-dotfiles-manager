@@ -125,7 +125,7 @@ Global installation is the **recommended approach** because:
 npm install -g git+https://github.com/TonyCasey/ai-dotfiles-manager.git
 
 # Or install a specific version
-npm install -g git+https://github.com/tony.casey/ai-dotfiles-manager.git#v1.1.0
+npm install -g git+https://github.com/TonyCasey/ai-dotfiles-manager.git#v1.1.0
 ```
 
 ### Option 2: From npm Registry
@@ -140,7 +140,7 @@ For teams without npm infrastructure:
 
 ```bash
 # Clone to shared drive
-git clone https://github.com/tony.casey/ai-dotfiles-manager.git /shared/dev-tools/ai
+git clone https://github.com/TonyCasey/ai-dotfiles-manager.git /shared/dev-tools/ai
 
 # Each developer installs from there
 npm install -g /shared/dev-tools/ai
@@ -520,7 +520,7 @@ See `.claude/rules/.local/README.md` (auto-generated) for detailed instructions.
 
 ```bash
 # Step 1: Install the tool globally
-npm install -g git+https://github.com/tony.casey/ai-dotfiles-manager.git
+npm install -g git+https://github.com/TonyCasey/ai-dotfiles-manager.git
 
 # Step 2: Clone first project
 git clone https://github.com/your-org/my-project.git
