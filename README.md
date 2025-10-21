@@ -1,7 +1,10 @@
 # AI Dotfiles Manager
-## An easier way to manage your AI tool rules & configs
->
-> Sick of .files folder overload and having to copy and paste tour rules, workflows & commands into different dotfile folders?
+## An EASY way to manage your AI CLI Dev tool config folders
+![developer.jpg](resources/developer.jpg)
+[![npm version](https://badge.fury.io/js/ai-dotfiles-manager.svg)](https://www.npmjs.com/package/ai-dotfiles-manager)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Sick of .files folder overload and having to copy and paste tour rules, workflows & commands into different dotfile folders?
 
 ```bash
 

@@ -1,8 +1,7 @@
 {
   "name": "ai-dotfiles-manager",
   "version": "1.4.0",
-  "description": "Centralized dotfiles manager for AI coding assistants - manage configurations for Claude Code, Cursor, Kilo Code, and Roo Code across all your projects",
-  "main": "index.js",
+  "description": "Centralized AI assistant configuration manager. Sync rules, slash commands, and workflows across Claude Code, Cursor, Kilo Code, and Roo Code. One setup, consistent AI assistance in all projects.",
   "bin": {
     "ai-dotfiles-manager": "./bin/setup.js"
   },
@@ -10,15 +9,24 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:verbose": "jest --verbose"
+    "test:verbose": "jest --verbose",
+    "postinstall": "node -e \"console.log('\\n✅ ai-dotfiles-manager installed! Run \\\"ai-dotfiles-manager setup\\\" in your project.\\n')\"",
+    "preversion": "npm test",
+    "prepublishOnly": "npm test && npm run test:coverage",
+    "version": "npm run test:coverage && git add -A",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "ai",
+    "ai-assistant",
+    "ai-tools",
     "dotfiles",
     "dotfiles-manager",
+    "config-manager",
     "claude",
     "claude-code",
     "cursor",
+    "cursor-ai",
     "kilo",
     "kilo-code",
     "roo",
@@ -28,17 +36,28 @@
     "standards",
     "clean-architecture",
     "code-review",
-    "config-management"
+    "config-management",
+    "cli",
+    "developer-tools",
+    "productivity",
+    "workflow",
+    "rules"
   ],
-  "author": "Tony Casey",
+  "author": {
+    "name": "Tony Casey",
+    "email": "tony@tonycasey.com",
+    "url": "https://github.com/TonyCasey"
+  },
   "license": "MIT",
   "preferGlobal": true,
   "files": [
     "templates/",
     "bin/",
     "scripts/",
+    "lib/",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "dependencies": {
     "chalk": "^4.1.2",
@@ -50,10 +69,18 @@
     "@types/jest": "^29.5.12"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.14.0 || >=18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tony.casey/ai-dotfiles-manager"
+    "url": "git+https://github.com/TonyCasey/ai-dotfiles-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TonyCasey/ai-dotfiles-manager/issues"
+  },
+  "homepage": "https://github.com/TonyCasey/ai-dotfiles-manager#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/TonyCasey"
   }
 }
