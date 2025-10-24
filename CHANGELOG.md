@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.5.2] - 2024-10-24
+
+### Added
+- **ESLint Configuration**: Automatically copies `.eslintrc.json` with TypeScript-specific linting rules
+- **ESLint TypeScript Config**: Added `tsconfig.eslint.json` for ESLint parsing configuration
+- **Configuration Backup**: Existing configuration files are now automatically backed up with `.bak` extension before being replaced
+- **Incremental Backups**: If `.bak` file exists, creates numbered backups (`.bak1`, `.bak2`, etc.)
+
+### Changed
+- Updated `setupTypeScriptConfig()` to include ESLint configuration files
+- Changed behavior from skipping existing files to backing them up and replacing
+- Enhanced console output to show backup file locations
+- Updated documentation to reflect ESLint support and backup feature
+
 ## [1.5.1] - 2024-10-24
 
 ### Added

@@ -1015,7 +1015,9 @@ async function setupTypeScriptConfig(isUpdate) {
 
   const tsConfigFiles = [
     { source: 'tsconfig.json', dest: 'tsconfig.json' },
-    { source: 'tsconfig.test.json', dest: 'tsconfig.test.json' }
+    { source: 'tsconfig.test.json', dest: 'tsconfig.test.json' },
+    { source: 'tsconfig.eslint.json', dest: 'tsconfig.eslint.json' },
+    { source: '.eslintrc.json', dest: '.eslintrc.json' }
   ];
 
   for (const { source, dest } of tsConfigFiles) {
@@ -1028,14 +1030,21 @@ async function setupTypeScriptConfig(isUpdate) {
       continue;
     }
 
-    // If file already exists in project, skip or prompt based on isUpdate
+    // If file already exists in project, backup and replace
     if (fs.existsSync(destPath)) {
-      if (isUpdate) {
-        console.log(chalk.gray(`  ⚬ Preserved existing ${dest}`));
-      } else {
-        console.log(chalk.gray(`  ⚬ ${dest} already exists, skipping`));
+      const backupPath = `${destPath}.bak`;
+      let backupNumber = 1;
+      let finalBackupPath = backupPath;
+
+      // Find unique backup filename if .bak already exists
+      while (fs.existsSync(finalBackupPath)) {
+        finalBackupPath = `${destPath}.bak${backupNumber}`;
+        backupNumber++;
       }
-      continue;
+
+      // Create backup
+      fs.copyFileSync(destPath, finalBackupPath);
+      console.log(chalk.yellow(`  ⚠ Backed up existing ${dest} to ${path.basename(finalBackupPath)}`));
     }
 
     // Copy the file
@@ -1043,7 +1052,7 @@ async function setupTypeScriptConfig(isUpdate) {
     console.log(chalk.green(`  ✓ Created ${dest}`));
   }
 
-  console.log(chalk.blue('  ℹ TypeScript configuration files provide strict type checking'));
+  console.log(chalk.blue('  ℹ TypeScript configuration files provide strict type checking and linting'));
 }
 
 function createLocalRulesReadme(localDir) {
@@ -1395,7 +1404,8 @@ function printNextSteps(tools, language, isUpdate = false) {
   }
 
   if (language === 'typescript') {
-    console.log(chalk.blue('💡 TypeScript configuration files (tsconfig.json, tsconfig.test.json) added'));
+    console.log(chalk.blue('💡 TypeScript configuration files added (tsconfig.json, tsconfig.test.json, tsconfig.eslint.json, .eslintrc.json)'));
+    console.log(chalk.blue('💡 Existing config files are backed up with .bak extension'));
   }
   console.log(chalk.blue('💡 All rules are now centralized in .dev/rules/ - no more duplication!'));
   console.log(chalk.blue('💡 Session hooks automatically load rules and commit completed todos'));
