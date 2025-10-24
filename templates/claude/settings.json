@@ -16,12 +16,5 @@
     "**/coverage/**",
     "**/.next/**",
     "**/.nuxt/**"
-  ],
-  "allowedCommands": [
-    "/create-repo",
-    "/create-service",
-    "/create-error",
-    "/create-tests",
-    "/review-changes"
   ]
 }
