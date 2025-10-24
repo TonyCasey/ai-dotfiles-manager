@@ -1,6 +1,5 @@
 {
   "rulesDirectory": "../.dev/rules",
-  "commandsDirectory": ".claude/commands",
   "workflowsDirectory": ".claude/workflows",
   "autoLoadRules": true,
   "sessionHooks": {

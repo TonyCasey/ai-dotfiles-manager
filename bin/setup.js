@@ -533,10 +533,31 @@ async function setupClaude(method, language) {
     }
   }
 
-  // Set up commands directory
-  const commandsDir = path.join(claudeDir, 'commands');
+  // Set up global commands directory (user-level, not project-level)
+  const globalCommandsDir = path.join(require('os').homedir(), '.claude', 'commands');
   const templateCommandsDir = path.join(templateDir, 'commands');
-  await setupSymlink(templateCommandsDir, commandsDir, 'commands directory');
+
+  // Create global commands directory if it doesn't exist
+  if (!fs.existsSync(globalCommandsDir)) {
+    fs.mkdirSync(globalCommandsDir, { recursive: true });
+    console.log(chalk.green('  ✓ Created global ~/.claude/commands directory'));
+  }
+
+  // Copy commands to global directory (not project-level)
+  if (fs.existsSync(templateCommandsDir) && fs.readdirSync(templateCommandsDir).length > 0) {
+    const commandFiles = fs.readdirSync(templateCommandsDir).filter(f => f.endsWith('.md'));
+    for (const file of commandFiles) {
+      const source = path.join(templateCommandsDir, file);
+      const dest = path.join(globalCommandsDir, file);
+
+      // Only copy if doesn't exist or is different
+      if (!fs.existsSync(dest) || fs.readFileSync(source, 'utf-8') !== fs.readFileSync(dest, 'utf-8')) {
+        fs.copyFileSync(source, dest);
+        console.log(chalk.green(`  ✓ Copied ${file} to global commands`));
+      }
+    }
+    console.log(chalk.blue('  ℹ Commands available globally in all projects'));
+  }
 
   // Set up workflows directory (if it has content in the future)
   const workflowsDir = path.join(claudeDir, 'workflows');
