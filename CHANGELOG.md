@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.6.2] - 2024-10-24
+
+### Fixed
+- **Duplicate Slash Commands**: Removed `allowedCommands` field from settings.json template that was causing commands to be registered twice
+  - Commands now load correctly from `commandsDirectory` without duplication
+  - `allowedCommands` should only be used when restricting/whitelisting specific commands
+
+## [1.6.1] - 2024-10-24
+
+### Fixed
+- **Invalid hooks.prePush Configuration**: Removed unsupported `hooks.prePush` from settings.json template
+  - Claude Code only supports: PreToolUse, PostToolUse, Notification, UserPromptSubmit, SessionStart, SessionEnd, Stop, SubagentStop, PreCompact
+  - Eliminates "Expected array, but received object" validation error on startup
+
+## [1.6.0] - 2024-10-24
+
+### Fixed
+- **Critical Security Fix**: Shell injection vulnerability in session-end.js
+  - Changed from string interpolation to stdin input for git commits
+  - Task names can now safely contain quotes and special characters
+- **Syntax Error**: Fixed incorrect variable assignment in ternary operator (session-start.js:111)
+  - Removed erroneous `statusIcon =` assignment that caused JavaScript syntax error
+- **Promise Handling**: Fixed `.catch()` call on non-async main() function in both session hooks
+  - Changed to try/catch blocks to properly handle synchronous errors
+- **Settings.json Symlink Issue**: Changed from symlink to copy for project-specific configuration
+  - Each project now has its own settings.json instead of sharing global template
+  - Prevents accidental global template modifications
+
 ## [1.5.4] - 2024-10-24
 
 ### Added
