@@ -38,6 +38,7 @@ A dotfiles manager for your AI tools!
 - **Multi-Language Support**: TypeScript, Python, Go, Java, and more (see [Multi-Language Support](#multi-language-support))
 - **TypeScript Configuration**: Strict tsconfig.json, tsconfig.test.json, tsconfig.eslint.json, and .eslintrc.json automatically added to TypeScript projects
 - **Configuration Backup**: Existing configuration files are automatically backed up with .bak extension before being replaced
+- **Code Quality Rules Guide**: Comprehensive documentation of TypeScript and ESLint rules with error prevention examples
 - **Testing Guidelines**: Patterns for repository and service tests with mocking
 - **Code Generation**: Step-by-step guides for creating repositories, services, and errors
 - **Slash Commands**: Reusable commands for common development tasks (Claude Code)

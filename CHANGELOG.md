@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.5.3] - 2024-10-24
+
+### Added
+- **Code Quality Rules Guide**: Added comprehensive `code-quality-rules.md` to shared rules
+  - Documents all TypeScript compiler rules and their purpose
+  - Explains ESLint rules for TypeScript projects
+  - Provides error prevention examples for common mistakes
+  - Includes development workflow and pre-commit check guidelines
+  - Shows IDE integration and CI/CD pipeline setup
+  - Quick reference table for all rules and their locations
+- **Error Prevention**: Detailed guide on preventing 6 major error categories:
+  - Import/Export errors
+  - Missing properties in interfaces
+  - Type mismatches
+  - Incomplete mocks
+  - Array/Object safety
+  - Async/Promise errors
+
+### Documentation
+- Added comprehensive documentation on TypeScript and ESLint rules
+- Included real-world examples of errors caught by each rule
+- Provided setup instructions for IDE integration and git hooks
+
 ## [1.5.2] - 2024-10-24
 
 ### Added

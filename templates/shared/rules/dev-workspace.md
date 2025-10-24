@@ -57,9 +57,9 @@ The todo.md uses standard markdown checkboxes:
 ## File Locations
 
 All .dev/ files are in the project root:
-- `/Users/tony.casey/Repos/ai/.dev/architecture.md`
-- `/Users/tony.casey/Repos/ai/.dev/todo.md`
-- `/Users/tony.casey/Repos/ai/.dev/README.md`
+- `/.dev/architecture.md`
+- `/.dev/todo.md`
+- `/.dev/README.md`
 
 ## Purpose
 
