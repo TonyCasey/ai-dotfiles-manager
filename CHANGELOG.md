@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-10-24
+
+### Changed
+- **Global Slash Commands**: Commands now install to `~/.claude/commands/` (user-level) instead of per-project
+  - Available across all projects automatically
+  - No duplicate command registration
+  - Commands update globally when package updates
+  - Cleaner project structure (no `.claude/commands/` directory)
+  - Removed `commandsDirectory` from settings.json template (no longer needed)
+
+### Benefits
+- ✅ Commands work in all projects without setup
+- ✅ No conflicts between project and user commands
+- ✅ Updates propagate to all projects automatically
+- ✅ Simpler project configuration
+
 ## [1.6.2] - 2024-10-24
 
 ### Fixed
