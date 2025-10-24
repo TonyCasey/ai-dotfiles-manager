@@ -167,9 +167,14 @@ async function main(isUpdate = false) {
 
   // Set up .dev folder for developer workspace
   await setupDevFolder(language, isUpdate);
-  
+
   // Set up centralized rules directory
   await setupCentralizedRules(language, isUpdate);
+
+  // Set up TypeScript configuration files if TypeScript project
+  if (language === 'typescript') {
+    await setupTypeScriptConfig(isUpdate);
+  }
 
   console.log(chalk.green.bold(`\n✅ ${isUpdate ? 'Update' : 'Setup'} complete!\n`));
   printNextSteps(tools, language, isUpdate);
@@ -977,7 +982,7 @@ async function setupCentralizedRules(language, isUpdate) {
 
 function setupHooks(devDir) {
   const hooksDir = path.join(devDir, 'hooks');
-  
+
   // Create hooks directory
   if (!fs.existsSync(hooksDir)) {
     fs.mkdirSync(hooksDir, { recursive: true });
@@ -987,11 +992,11 @@ function setupHooks(devDir) {
   // Copy hook scripts from templates
   const hooksSourceDir = path.join(TEMPLATES_DIR, 'dev', 'hooks');
   const hooks = ['session-start.js', 'session-end.js', 'todo-commit.js'];
-  
+
   hooks.forEach(hook => {
     const sourcePath = path.join(hooksSourceDir, hook);
     const destPath = path.join(hooksDir, hook);
-    
+
     if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
       fs.copyFileSync(sourcePath, destPath);
       // Make hooks executable on Unix systems
@@ -1003,6 +1008,42 @@ function setupHooks(devDir) {
       console.log(chalk.green(`  ✓ Created ${hook}`));
     }
   });
+}
+
+async function setupTypeScriptConfig(isUpdate) {
+  console.log(chalk.blue('\n📦 Setting up TypeScript configuration files...'));
+
+  const tsConfigFiles = [
+    { source: 'tsconfig.json', dest: 'tsconfig.json' },
+    { source: 'tsconfig.test.json', dest: 'tsconfig.test.json' }
+  ];
+
+  for (const { source, dest } of tsConfigFiles) {
+    const sourcePath = path.join(TEMPLATES_DIR, 'languages', 'typescript', source);
+    const destPath = path.join(PROJECT_ROOT, dest);
+
+    // Check if source file exists
+    if (!fs.existsSync(sourcePath)) {
+      console.log(chalk.yellow(`  ⚠ Template file ${source} not found, skipping`));
+      continue;
+    }
+
+    // If file already exists in project, skip or prompt based on isUpdate
+    if (fs.existsSync(destPath)) {
+      if (isUpdate) {
+        console.log(chalk.gray(`  ⚬ Preserved existing ${dest}`));
+      } else {
+        console.log(chalk.gray(`  ⚬ ${dest} already exists, skipping`));
+      }
+      continue;
+    }
+
+    // Copy the file
+    fs.copyFileSync(sourcePath, destPath);
+    console.log(chalk.green(`  ✓ Created ${dest}`));
+  }
+
+  console.log(chalk.blue('  ℹ TypeScript configuration files provide strict type checking'));
 }
 
 function createLocalRulesReadme(localDir) {
@@ -1353,6 +1394,9 @@ function printNextSteps(tools, language, isUpdate = false) {
     console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos\n'));
   }
 
+  if (language === 'typescript') {
+    console.log(chalk.blue('💡 TypeScript configuration files (tsconfig.json, tsconfig.test.json) added'));
+  }
   console.log(chalk.blue('💡 All rules are now centralized in .dev/rules/ - no more duplication!'));
   console.log(chalk.blue('💡 Session hooks automatically load rules and commit completed todos'));
   console.log(chalk.blue('💡 Run "ai-dotfiles-manager update" to get the latest templates'));

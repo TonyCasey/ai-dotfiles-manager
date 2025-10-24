@@ -6,7 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
-### 1.3.0 - Centralized Architecture with Session Hooks
+## [1.5.1] - 2024-10-24
+
+### Added
+- **TypeScript Configuration Files**: Automatically copies strict `tsconfig.json` and `tsconfig.test.json` to TypeScript projects during setup
+- **Strict Type Checking**: Includes comprehensive compiler options for maximum type safety
+- **Test Configuration**: Separate test config with relaxed rules for testing
+- **Setup Integration**: TypeScript configs are automatically added when setting up TypeScript projects
+
+### Changed
+- Updated setup process to include TypeScript configuration files
+- Enhanced documentation to reflect TypeScript configuration feature
+- Updated `printNextSteps()` to inform users about TypeScript config files
+
+## [1.5.0] - 2024-10-24 - Centralized Architecture with Session Hooks
 
 - **Added Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
 - **Implemented Session Hooks**: Automatic start/end actions with todo commit enforcement

@@ -36,6 +36,7 @@ A dotfiles manager for your AI tools!
 - **Auto-Context Loading**: AI assistants automatically load centralized rules and project context
 - **Migration Support**: Gracefully handles existing AI configurations with 4 migration options
 - **Multi-Language Support**: TypeScript, Python, Go, Java, and more (see [Multi-Language Support](#multi-language-support))
+- **TypeScript Configuration**: Strict tsconfig.json and tsconfig.test.json automatically added to TypeScript projects
 - **Testing Guidelines**: Patterns for repository and service tests with mocking
 - **Code Generation**: Step-by-step guides for creating repositories, services, and errors
 - **Slash Commands**: Reusable commands for common development tasks (Claude Code)
