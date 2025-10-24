@@ -546,7 +546,7 @@ async function setupClaude(method, language) {
     await setupSymlink(templateWorkflowsDir, workflowsDir, 'workflows directory');
   }
 
-  // Symlink settings.json if it exists in template
+  // Copy settings.json if it exists in template (do not symlink - each project needs its own)
   const settingsTemplate = path.join(templateDir, 'settings.json');
   const settingsTarget = path.join(claudeDir, 'settings.json');
 
@@ -562,12 +562,14 @@ async function setupClaude(method, language) {
       ]);
 
       if (overwrite) {
-        await setupSymlink(settingsTemplate, settingsTarget, 'settings.json');
+        fs.copyFileSync(settingsTemplate, settingsTarget);
+        console.log(chalk.green('  ✓ Copied settings.json (project-specific)'));
       } else {
         console.log(chalk.gray('  Skipped settings.json'));
       }
     } else {
-      await setupSymlink(settingsTemplate, settingsTarget, 'settings.json');
+      fs.copyFileSync(settingsTemplate, settingsTarget);
+      console.log(chalk.green('  ✓ Copied settings.json (project-specific)'));
     }
   }
 

@@ -80,13 +80,16 @@ function commitCompletedTasks(tasks) {
     
     // Stage todo.md
     execSync('git add .dev/todo.md', { stdio: 'ignore' });
-    
+
     // Create commit message
     const taskList = tasks.map(task => `- ${task}`).join('\n  ');
     const commitMessage = `chore: complete task(s)\n\n  ${taskList}\n\n[ai-dotfiles]`;
-    
-    // Commit changes
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'ignore' });
+
+    // Commit changes (using stdin to avoid shell injection)
+    execSync('git commit -F -', {
+      input: commitMessage,
+      stdio: ['pipe', 'ignore', 'ignore']
+    });
     
     log(`Committed ${tasks.length} completed task(s):`, 'success');
     tasks.forEach(task => log(`  ✓ ${task}`, 'success'));
@@ -177,10 +180,12 @@ function main() {
 
 // Run if called directly
 if (require.main === module) {
-  main().catch(error => {
+  try {
+    main();
+  } catch (error) {
     log(`Session end failed: ${error.message}`, 'error');
     process.exit(1);
-  });
+  }
 }
 
 module.exports = { main, findCompletedTasks, commitCompletedTasks };

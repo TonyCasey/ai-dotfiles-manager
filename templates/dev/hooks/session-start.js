@@ -106,9 +106,9 @@ function checkGitStatus() {
       lines.forEach(line => {
         const [statusChar, ...filePathParts] = line.split(' ');
         const filePath = filePathParts.join(' ');
-        const statusIcon = statusChar.includes('M') ? '📝' : 
-                         statusChar.includes('A') ? '➕' : 
-                         statusIcon = statusChar.includes('D') ? '🗑️' : '❓';
+        const statusIcon = statusChar.includes('M') ? '📝' :
+                         statusChar.includes('A') ? '➕' :
+                         statusChar.includes('D') ? '🗑️' : '❓';
         log(`  ${statusIcon} ${filePath}`);
       });
     } else {
@@ -171,10 +171,12 @@ function main() {
 
 // Run if called directly
 if (require.main === module) {
-  main().catch(error => {
+  try {
+    main();
+  } catch (error) {
     log(`Session start failed: ${error.message}`, 'error');
     process.exit(1);
-  });
+  }
 }
 
 module.exports = { main, loadRulesIntoContext, loadProjectContext };
