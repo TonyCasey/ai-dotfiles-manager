@@ -39,6 +39,8 @@ A dotfiles manager for your AI tools!
 - **TypeScript Configuration**: Strict tsconfig.json, tsconfig.test.json, tsconfig.eslint.json, and .eslintrc.json automatically added to TypeScript projects
 - **Configuration Backup**: Existing configuration files are automatically backed up with .bak extension before being replaced
 - **Code Quality Rules Guide**: Comprehensive documentation of TypeScript and ESLint rules with error prevention examples
+- **Pre-PR Review Command**: `/review-changes` command for comprehensive code review before pushing changes
+- **Pre-Push Hook**: Automatic review trigger that prevents pushing code with critical issues
 - **Testing Guidelines**: Patterns for repository and service tests with mocking
 - **Code Generation**: Step-by-step guides for creating repositories, services, and errors
 - **Slash Commands**: Reusable commands for common development tasks (Claude Code)

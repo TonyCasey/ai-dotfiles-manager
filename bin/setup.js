@@ -991,7 +991,7 @@ function setupHooks(devDir) {
 
   // Copy hook scripts from templates
   const hooksSourceDir = path.join(TEMPLATES_DIR, 'dev', 'hooks');
-  const hooks = ['session-start.js', 'session-end.js', 'todo-commit.js'];
+  const hooks = ['session-start.js', 'session-end.js', 'todo-commit.js', 'pre-push-review.md'];
 
   hooks.forEach(hook => {
     const sourcePath = path.join(hooksSourceDir, hook);

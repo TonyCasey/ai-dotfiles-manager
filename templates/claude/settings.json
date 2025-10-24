@@ -7,6 +7,12 @@
     "start": "../.dev/hooks/session-start.js",
     "end": "../.dev/hooks/session-end.js"
   },
+  "hooks": {
+    "prePush": {
+      "enabled": true,
+      "reviewFile": "../.dev/hooks/pre-push-review.md"
+    }
+  },
   "excludePatterns": [
     "**/node_modules/**",
     "**/dist/**",
@@ -21,6 +27,7 @@
     "/create-repo",
     "/create-service",
     "/create-error",
-    "/create-tests"
+    "/create-tests",
+    "/review-changes"
   ]
 }

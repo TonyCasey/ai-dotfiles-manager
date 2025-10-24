@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.5.4] - 2024-10-24
+
+### Added
+- **Pre-PR Review Command**: New `/review-changes` command for comprehensive code review before pushing
+  - Analyzes all changes compared to main branch
+  - Code quality assessment with Clean Architecture compliance check
+  - Testing coverage analysis
+  - Breaking changes detection
+  - Security and performance review
+  - Documentation status check
+  - Provides actionable recommendations
+- **Pre-Push Hook**: Automatic review trigger when user requests a push
+  - Blocks pushes with critical issues (security, failing tests, etc.)
+  - Warns about non-critical issues and asks user for confirmation
+  - Integrates seamlessly with git push workflow
+  - Configurable via Claude settings (can be disabled)
+- **Review Categories**:
+  - Source code changes analysis
+  - Test coverage assessment
+  - Configuration changes review
+  - Documentation updates check
+  - Architecture compliance verification
+  - Security vulnerability detection
+  - Performance issue identification
+
+### Changed
+- Updated Claude settings.json to include pre-push hook configuration
+- Enhanced hooks setup to include pre-push-review.md
+- Added `/review-changes` to allowed commands list
+
+### Documentation
+- Comprehensive pre-PR review guidelines with structured output format
+- Pre-push hook documentation with decision logic and edge cases
+- Examples of critical issues vs warnings
+- User override capabilities documented
+
 ## [1.5.3] - 2024-10-24
 
 ### Added
