@@ -1,231 +1,47 @@
-# Development Rules
+# Cursor AI Configuration
+# This file points to centralized rules in .dev/rules/
 
-You are an expert TypeScript developer working on a project following Clean Architecture principles.
+# Load centralized shared rules
+> ../.dev/rules/shared/clean-architecture.md
+> ../.dev/rules/shared/repository-pattern.md
+> ../.dev/rules/shared/testing-principles.md
 
-## Context Loading - IMPORTANT
+# Load language-specific rules (adjust based on your project)
+> ../.dev/rules/typescript/coding-standards.md
+> ../.dev/rules/typescript/testing.md
 
-**At the start of every new session**, load these files for project context:
-1. `.dev/architecture.md` - Project structure, technologies, patterns
-2. `.dev/todo.md` - Current tasks and priorities
-3. Any other `.md` files in `.dev/`
+# Load project-specific custom rules
+> ../.dev/rules/.local/custom-rules.md
 
-Use this context to provide better, project-aware suggestions. Reference the todo list when helping with tasks.
+# Session hooks (if supported)
+# Start: ../.dev/hooks/session-start.js
+# End: ../.dev/hooks/session-end.js
 
-## Architecture Principles
+---
 
-### Layer Structure
-- **Domain Layer** (`src/domain/`): Core business interfaces and errors, NO external dependencies
-- **Application Layer** (`src/application/`): Business logic, use cases, services (depends on domain only)
-- **Infrastructure Layer** (`src/infrastructure/`): External integrations, repositories, database (depends on both)
+## Development Standards
 
-### Key Rules
-1. **Dependency Flow**: Infrastructure → Application → Domain (never reverse)
-2. **Repository Pattern**: All data access through repositories
-3. **Dependency Injection**: Use constructor injection for all dependencies
-4. **Interface Segregation**: One focused interface per file
-5. **Domain Errors**: Extend `DomainError` with appropriate HTTP status codes
+### Clean Architecture
+- Follow layer separation: Domain → Application → Infrastructure
+- Dependencies point inward
+- Use dependency injection
 
-## TypeScript Conventions
+### Code Quality
+- Write clean, readable code
+- Add meaningful comments
+- Follow established patterns
 
-### Interface Organization
-- **One interface per file**: File name must match interface name exactly
-- **Prefix with "I"**: All interface files use "I" prefix (e.g., `ICartService.ts`)
-- **Layer-based organization**: Interfaces organized by architectural layer
-- **No grouping**: Never put multiple interfaces in one file
+### Testing
+- Write tests for all new features
+- Use descriptive test names
+- Mock external dependencies
 
-### Import Patterns
-```typescript
-// GOOD - Specific imports
-import { ICartService } from '../application/interfaces/ICartService';
+### Todo Management
+- Use .dev/todo.md for task tracking
+- Completed tasks are auto-committed
+- Keep tasks specific and actionable
 
-// GOOD - Layer index for multiple imports
-import { ICartService, IOrderService } from '../application/interfaces';
+---
 
-// BAD - Importing from deprecated types.ts
-import { IProductCatalog } from '../utils/products/types';
-```
-
-### Export Organization
-- Export from layer index: `src/{layer}/interfaces/index.ts`
-- Export from main index: `src/index.ts` for public API
-- Always export new interfaces in appropriate indices
-
-## Code Generation Patterns
-
-### Creating a Repository
-1. Interface in `src/domain/interfaces/IProductRepository.ts`
-2. Error class in `src/domain/errors/ProductNotFoundError.ts` (404)
-3. Implementation in `src/infrastructure/repositories/ProductRepository.ts`
-4. Export from all indices
-5. Register in `src/infrastructure/di/DIRegistration.ts`
-6. Tests in `tests/infrastructure/unit/ProductRepository.test.ts`
-
-### Creating a Service
-1. Interface in `src/application/interfaces/ICartService.ts`
-2. Implementation in `src/application/services/CartService.ts`
-3. Use constructor injection for all dependencies
-4. Export from all indices
-5. Register in `src/infrastructure/di/DIRegistration.ts`
-6. Tests in `tests/application/unit/CartService.test.ts`
-
-### Creating Domain Errors
-```typescript
-// src/domain/errors/CartEmptyError.ts
-import { DomainError } from "./DomainError";
-
-export class CartEmptyError extends DomainError {
-  constructor(cartId: string, details?: Record<string, unknown>) {
-    super(
-      `Cart ${cartId} is empty`,
-      "CART_EMPTY",
-      400, // 400, 404, 409, 429, 500
-      { cartId, ...details }
-    );
-  }
-}
-```
-
-## Testing Patterns
-
-### Repository Tests
-- Use `MockDatabaseService` to avoid real database calls
-- Test all CRUD operations and error cases
-- Use `beforeEach` and `afterEach` for isolation
-
-```typescript
-describe("ProductRepository", () => {
-  let repository: ProductRepository;
-  let mockDatabaseService: MockDatabaseService;
-
-  beforeEach(() => {
-    mockDatabaseService = new MockDatabaseService();
-    repository = new ProductRepository(mockDatabaseService);
-  });
-
-  afterEach(() => {
-    mockDatabaseService.reset();
-  });
-
-  it("should throw ProductNotFoundError when not found", async () => {
-    await expect(repository.getById("invalid")).rejects.toThrow(ProductNotFoundError);
-  });
-});
-```
-
-### Service Tests
-- Mock all repository dependencies using `jest.Mocked<>`
-- Test business logic, not data access
-- Test error propagation and edge cases
-
-```typescript
-describe("CartService", () => {
-  let service: CartService;
-  let mockCartRepo: jest.Mocked<ICartRepository>;
-  let mockProductRepo: jest.Mocked<IProductRepository>;
-
-  beforeEach(() => {
-    mockCartRepo = { getById: jest.fn(), update: jest.fn() } as any;
-    mockProductRepo = { getById: jest.fn() } as any;
-    service = new CartService(mockCartRepo, mockProductRepo);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-});
-```
-
-## Data Access Patterns
-
-### Always Use Repositories
-```typescript
-// GOOD - Using repository
-const product = await this.productRepository.getById(productId);
-
-// BAD - Direct database access in service
-const product = await this.databaseService.readDocDataAtPath(`products/${productId}`);
-```
-
-### Use Factory Pattern for External Services
-```typescript
-// GOOD - Factory pattern
-const databaseService = getDatabaseService();
-
-// BAD - Direct import
-import * as database from 'database-client';
-```
-
-### Throw Domain Errors
-```typescript
-// GOOD - Specific domain error
-if (!product) {
-  throw new ProductNotFoundError(productId);
-}
-
-// BAD - Generic error
-if (!product) {
-  throw new Error(`Product not found: ${productId}`);
-}
-```
-
-## SOLID Principles
-
-### Single Responsibility
-- Each interface has one clear responsibility
-- Services limited to ~20 methods
-- Split large services by responsibility
-
-### Interface Segregation
-- Small, focused interfaces over large monolithic ones
-- Clients depend only on methods they use
-
-### Dependency Inversion
-- Depend on interfaces, not implementations
-- Use constructor injection
-- Never import external dependencies directly
-
-## Type Safety
-
-### Strict TypeScript
-- `strict: true` in tsconfig.json
-- All type errors must be resolved
-- No `any` types in new code (use proper interfaces)
-
-### Error Status Codes
-- `400` - Bad Request (validation, invalid parameters)
-- `404` - Not Found (entity doesn't exist)
-- `409` - Conflict (duplicate, already exists)
-- `429` - Too Many Requests (rate limiting, quotas)
-- `500` - Internal Server Error (unexpected errors)
-
-## Common Pitfalls to Avoid
-
-1. **Violating layer dependencies**: Never import infrastructure from domain/application
-2. **Skipping DI registration**: Always register new repositories/services
-3. **Forgetting to export**: Add to layer index and main index
-4. **Not updating mocks**: Keep mocks in sync with interface changes
-5. **Hard-coding database paths**: Use repository abstractions
-6. **Importing from types.ts**: Use `interfaces/I*.ts` instead
-7. **Testing implementation details**: Focus on behavior, not internals
-
-## Best Practices
-
-- Write descriptive JSDoc comments for public methods
-- Use meaningful variable and method names
-- Keep functions small and focused
-- Test both happy path and error scenarios
-- Use `beforeEach` and `afterEach` for test isolation
-- Don't rely on test execution order
-- Mock external dependencies in tests
-- Use Arrange-Act-Assert pattern in tests
-
-## When Working on Code
-
-1. **Check layer**: Ensure code is in the correct architectural layer
-2. **Check dependencies**: Verify dependency flow is correct
-3. **Use repositories**: All database access through repositories
-4. **Use DI**: Constructor injection for all dependencies
-5. **Write tests**: Test files for all new code
-6. **Export properly**: Add to all appropriate indices
-7. **Register with DI**: Add to DI container
-8. **Use domain errors**: Specific error classes, not generic errors
+*This configuration loads rules from the centralized .dev/rules/ directory.*
+*Custom rules can be added to .dev/rules/.local/*

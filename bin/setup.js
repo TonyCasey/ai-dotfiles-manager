@@ -34,6 +34,11 @@ if (command === 'review') {
     console.error(chalk.red('\n❌ Error during review:'), error);
     process.exit(1);
   });
+} else if (command === 'commit-todo') {
+  handleCommitTodoCommand().catch((error) => {
+    console.error(chalk.red('\n❌ Error during todo commit:'), error);
+    process.exit(1);
+  });
 } else if (command === 'init' || command === 'setup' || command === 'update' || !command) {
   const isUpdate = command === 'update';
   main(isUpdate).catch((error) => {
@@ -54,6 +59,7 @@ function printHelp() {
   console.log(chalk.gray('  setup, init       Set up AI configuration in current project (default)'));
   console.log(chalk.gray('  update            Update existing AI configuration with latest templates'));
   console.log(chalk.gray('  review [options]  Analyze codebase for Clean Architecture violations'));
+  console.log(chalk.gray('  commit-todo       Enforce todo commit policy'));
   console.log(chalk.gray('  --version, -v     Show version number'));
   console.log(chalk.gray('  --help, -h        Show this help message\n'));
   console.log(chalk.white('Review Options:'));
@@ -161,6 +167,9 @@ async function main(isUpdate = false) {
 
   // Set up .dev folder for developer workspace
   await setupDevFolder(language, isUpdate);
+  
+  // Set up centralized rules directory
+  await setupCentralizedRules(language, isUpdate);
 
   console.log(chalk.green.bold(`\n✅ ${isUpdate ? 'Update' : 'Setup'} complete!\n`));
   printNextSteps(tools, language, isUpdate);
@@ -888,6 +897,7 @@ async function setupDevFolder(language, isUpdate) {
 
   // Generate architecture.md (always regenerate to keep it fresh)
   const architecturePath = path.join(devDir, 'architecture.md');
+  const { generateArchitectureDoc } = require('../lib/architecture-generator');
   const architectureContent = generateArchitectureDoc(language);
   fs.writeFileSync(architecturePath, architectureContent);
   console.log(chalk.green('  ✓ Generated architecture.md'));
@@ -911,6 +921,198 @@ async function setupDevFolder(language, isUpdate) {
   }
 
   console.log(chalk.blue('  ℹ .dev/ is auto-loaded into AI context on every session'));
+}
+
+async function setupCentralizedRules(language, isUpdate) {
+  const devDir = path.join(PROJECT_ROOT, '.dev');
+  const rulesDir = path.join(devDir, 'rules');
+
+  console.log(chalk.blue('\n📦 Setting up centralized rules...'));
+
+  // Create .dev/rules directory structure
+  if (!fs.existsSync(rulesDir)) {
+    fs.mkdirSync(rulesDir, { recursive: true });
+    console.log(chalk.green('  ✓ Created .dev/rules/ directory'));
+  }
+
+  // Create shared rules symlink
+  const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
+  const sharedRulesDest = path.join(rulesDir, 'shared');
+  const sharedResult = await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
+
+  // Create language-specific rules symlink
+  const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
+  const languageRulesDest = path.join(rulesDir, language);
+  let languageResult = { usedCopy: false };
+
+  if (fs.existsSync(languageRulesSource)) {
+    languageResult = await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
+  } else {
+    console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
+  }
+
+  // Create .local directory for custom rules
+  const rulesLocalDir = path.join(rulesDir, '.local');
+  if (!fs.existsSync(rulesLocalDir)) {
+    fs.mkdirSync(rulesLocalDir, { recursive: true });
+    console.log(chalk.green('  ✓ Created .dev/rules/.local/ for custom rules'));
+  }
+
+  // Create README in .local directory
+  createLocalRulesReadme(rulesLocalDir);
+
+  // Create README in rules directory
+  const rulesReadmePath = path.join(rulesDir, 'README.md');
+  if (!fs.existsSync(rulesReadmePath)) {
+    const rulesReadmeContent = generateRulesReadme();
+    fs.writeFileSync(rulesReadmePath, rulesReadmeContent);
+    console.log(chalk.green('  ✓ Created .dev/rules/README.md'));
+  }
+
+  // Set up hooks directory
+  await setupHooks(devDir);
+
+  console.log(chalk.green('  ✓ Centralized rules set up'));
+}
+
+function setupHooks(devDir) {
+  const hooksDir = path.join(devDir, 'hooks');
+  
+  // Create hooks directory
+  if (!fs.existsSync(hooksDir)) {
+    fs.mkdirSync(hooksDir, { recursive: true });
+    console.log(chalk.green('  ✓ Created .dev/hooks/ directory'));
+  }
+
+  // Copy hook scripts from templates
+  const hooksSourceDir = path.join(TEMPLATES_DIR, 'dev', 'hooks');
+  const hooks = ['session-start.js', 'session-end.js', 'todo-commit.js'];
+  
+  hooks.forEach(hook => {
+    const sourcePath = path.join(hooksSourceDir, hook);
+    const destPath = path.join(hooksDir, hook);
+    
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+      fs.copyFileSync(sourcePath, destPath);
+      // Make hooks executable on Unix systems
+      try {
+        fs.chmodSync(destPath, 0o755);
+      } catch (error) {
+        // Ignore permission errors on Windows
+      }
+      console.log(chalk.green(`  ✓ Created ${hook}`));
+    }
+  });
+}
+
+function createLocalRulesReadme(localDir) {
+  const readmePath = path.join(localDir, 'README.md');
+  if (fs.existsSync(readmePath)) {
+    return; // Don't overwrite existing README
+  }
+
+  const readmeContent = `# Local Rules Directory
+
+This directory contains **project-specific custom rules** that override or extend the base rules.
+
+## How to customize
+
+### Override specific rules
+Create a file with the same name as a base rule to override it:
+\`\`\`
+.local/
+  └── clean-architecture.md    # Overrides shared/clean-architecture.md
+\`\`\`
+
+### Add new rules
+Add new markdown files for project-specific requirements:
+\`\`\`
+.local/
+  └── custom-api-standards.md
+  └── database-conventions.md
+\`\`\`
+
+### Extend existing rules
+Reference and extend base rules in your custom files:
+\`\`\`markdown
+<!-- In .local/custom-architecture.md -->
+# Custom Architecture Rules
+
+See base rules in \`../shared/clean-architecture.md\`
+
+## Project-Specific Additions
+- Our API uses GraphQL instead of REST
+- ...
+\`\`\`
+
+## Updating base rules
+
+When you run \`ai-dotfiles-manager update\`, the symlinked directories are automatically updated with the latest templates, but your .local files remain untouched.
+
+## Git
+
+**Commit .local files** to share project-specific rules with your team:
+\`\`\`gitignore
+# In your .gitignore:
+# Ignore symlinked base rules
+.dev/rules/shared/
+.dev/rules/typescript/
+
+# But commit local customizations
+!.dev/rules/.local/
+\`\`\`
+`;
+
+  fs.writeFileSync(readmePath, readmeContent);
+}
+
+function generateRulesReadme() {
+  return `# Centralized Rules Directory
+
+This directory contains **centralized rules** for all AI coding assistants, eliminating duplication across provider folders.
+
+## Structure
+
+\`\`\`
+.dev/rules/
+├── shared/              # Language-agnostic rules (symlinked)
+│   ├── clean-architecture.md
+│   ├── repository-pattern.md
+│   └── testing-principles.md
+├── typescript/          # Language-specific rules (symlinked)
+│   ├── coding-standards.md
+│   └── testing.md
+└── .local/             # Project-specific overrides
+    ├── custom-rules.md
+    └── architecture.md   # Override shared rules
+\`\`\`
+
+## How It Works
+
+### Base Rules (Read-Only Symlinks)
+- **Shared Rules**: Universal principles applicable to all projects
+- **Language Rules**: Specific conventions for your programming language
+- **Symlinked from**: Global package templates
+- **Automatically updated**: Run \`ai-dotfiles-manager update\`
+
+### Local Overrides (Writable)
+- **Project-specific**: Custom rules for this project only
+- **Override capability**: Files with same name replace base rules
+- **Version control**: Commit these to share with your team
+- **Survive updates**: Never affected by package updates
+
+## Loading Priority
+
+1. **Base shared rules** loaded first
+2. **Language-specific rules** loaded next
+3. **Local overrides** loaded last (highest priority)
+
+This means your \`.local/\` rules always take precedence over base rules.
+
+---
+
+*This centralized approach eliminates the need to maintain separate rule sets for each AI provider.*
+`;
 }
 
 function generateArchitectureDoc(language) {
@@ -1118,7 +1320,7 @@ function printNextSteps(tools, language, isUpdate = false) {
 
   if (tools.includes('claude')) {
     console.log(chalk.white('Claude Code:'));
-    console.log(chalk.gray('  • Rules are available in .claude/rules/'));
+    console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
     console.log(chalk.gray('    - shared/ (symlinked, read-only)'));
     console.log(chalk.gray(`    - ${language}/ (symlinked, read-only)`));
     console.log(chalk.gray('    - .local/ (your custom rules)'));
@@ -1127,36 +1329,52 @@ function printNextSteps(tools, language, isUpdate = false) {
     console.log(chalk.gray('    - /create-service - Create a new service'));
     console.log(chalk.gray('    - /create-error - Create a domain error'));
     console.log(chalk.gray('    - /create-tests - Generate test files'));
-    console.log(chalk.gray('  • Customize: Add files to .claude/rules/.local/\n'));
+    console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos\n'));
   }
 
   if (tools.includes('cursor')) {
     console.log(chalk.white('Cursor:'));
-    console.log(chalk.gray('  • Rules are in .cursorrules (symlinked, read-only)'));
+    console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
+    console.log(chalk.gray('    - Via .cursorrules pointing to .dev/rules/'));
     console.log(chalk.gray('  • Customize: Edit .cursorrules.local\n'));
   }
 
   if (tools.includes('kilo')) {
     console.log(chalk.white('Kilo Code:'));
-    console.log(chalk.gray('  • Rules are available in .kilocode/rules/'));
-    console.log(chalk.gray('    - shared/ (symlinked, read-only)'));
-    console.log(chalk.gray(`    - ${language}/ (symlinked, read-only)`));
-    console.log(chalk.gray('    - .local/ (your custom rules)'));
-    console.log(chalk.gray('  • Customize: Add files to .kilocode/rules/.local/\n'));
+    console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
+    console.log(chalk.gray('    - Via config.json pointing to .dev/rules/'));
+    console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos\n'));
   }
 
   if (tools.includes('roo')) {
     console.log(chalk.white('Roo Code:'));
-    console.log(chalk.gray('  • Rules are available in .roo/rules/'));
-    console.log(chalk.gray('    - shared/ (symlinked, read-only)'));
-    console.log(chalk.gray(`    - ${language}/ (symlinked, read-only)`));
-    console.log(chalk.gray('    - .local/ (your custom rules)'));
-    console.log(chalk.gray('  • Customize: Add files to .roo/rules/.local/\n'));
+    console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
+    console.log(chalk.gray('    - Via config.json pointing to .dev/rules/'));
+    console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos\n'));
   }
 
-  console.log(chalk.blue('💡 Base rules are read-only symlinks - customize via .local/ directories'));
+  console.log(chalk.blue('💡 All rules are now centralized in .dev/rules/ - no more duplication!'));
+  console.log(chalk.blue('💡 Session hooks automatically load rules and commit completed todos'));
   console.log(chalk.blue('💡 Run "ai-dotfiles-manager update" to get the latest templates'));
   console.log(chalk.blue('💡 Run "ai-dotfiles-manager review" to check for architecture violations\n'));
+}
+
+async function handleCommitTodoCommand() {
+  const { enforceCommitPolicy, checkUncommittedWork } = require('../templates/dev/hooks/todo-commit.js');
+  
+  console.log(chalk.blue.bold('\n🔄 Todo Commit Enforcement\n'));
+  
+  const command = process.argv[3];
+  
+  switch (command) {
+    case 'check':
+      checkUncommittedWork();
+      break;
+    case 'enforce':
+    default:
+      enforceCommitPolicy();
+      break;
+  }
 }
 
 async function handleReviewCommand(reviewArgs) {

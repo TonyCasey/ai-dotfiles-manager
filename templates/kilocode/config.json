@@ -1,12 +1,10 @@
 {
   "rulesDirectory": "../.dev/rules",
-  "commandsDirectory": ".claude/commands",
-  "workflowsDirectory": ".claude/workflows",
-  "autoLoadRules": true,
   "sessionHooks": {
     "start": "../.dev/hooks/session-start.js",
     "end": "../.dev/hooks/session-end.js"
   },
+  "autoLoadRules": true,
   "excludePatterns": [
     "**/node_modules/**",
     "**/dist/**",
@@ -17,10 +15,9 @@
     "**/.next/**",
     "**/.nuxt/**"
   ],
-  "allowedCommands": [
-    "/create-repo",
-    "/create-service",
-    "/create-error",
-    "/create-tests"
-  ]
+  "features": {
+    "autoCommit": true,
+    "sessionTracking": true,
+    "architectureGeneration": true
+  }
 }

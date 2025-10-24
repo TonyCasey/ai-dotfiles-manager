@@ -8,22 +8,32 @@ Sick of .files folder overload and having to copy and paste tour rules, workflow
 
 ```bash
 
-    ├── .claude/
-    ├── .cursor/
-    ├── .kilocode/
-    ├── .roo/
-    └── ....
+    ├── .claude/              # Claude Code config (points to .dev/rules/)
+    ├── .cursorrules           # Cursor config (points to .dev/rules/)
+    ├── .kilocode/           # Kilo Code config (points to .dev/rules/)
+    ├── .roo/                # Roo Code config (points to .dev/rules/)
+    └── .dev/                # Centralized rules and workspace
+        ├── rules/            # Centralized rule repository
+        │   ├── shared/      # Language-agnostic rules
+        │   ├── typescript/   # Language-specific rules
+        │   └── .local/      # Project-specific overrides
+        ├── hooks/            # Session automation scripts
+        └── todo.md           # Developer task list
 ```
 
-This package provides centralized configurations for AI coding CLI assistants (Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.  
+This package provides **centralized configurations** for AI coding CLI assistants (Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.
+
+**Key Innovation**: All rules are now centralized in `.dev/rules/` instead of duplicated across provider folders. Session hooks automatically load rules and commit completed tasks.
 
 A dotfiles manager for your AI tools!
 
 ## Features
 
+- **Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
+- **Session Hooks**: Automatic start/end actions with todo commit enforcement
 - **Clean Architecture Rules**: Enforce layer separation, dependency inversion, and SOLID principles
 - **Developer Workspace (.dev/)**: Personal workspace with auto-generated architecture docs and todo list
-- **Auto-Context Loading**: AI assistants automatically load your project context and tasks
+- **Auto-Context Loading**: AI assistants automatically load centralized rules and project context
 - **Migration Support**: Gracefully handles existing AI configurations with 4 migration options
 - **Multi-Language Support**: TypeScript, Python, Go, Java, and more (see [Multi-Language Support](#multi-language-support))
 - **Testing Guidelines**: Patterns for repository and service tests with mocking
@@ -32,7 +42,7 @@ A dotfiles manager for your AI tools!
 - **Code Review**: Automated architecture violation detection with detailed reports
 - **Multi-Tool Support**: Works with Claude Code, Cursor, Kilo Code, and Roo Code
 - **Global Installation**: Install once, use in all your projects
-- **Symlinked Templates**: Always up-to-date, with `.local/` for project-specific customizations
+- **Automatic Todo Commits**: Enforces git commits when tasks are completed
 - **Comprehensive Test Suite**: 53+ tests following SOLID principles and best practices
 
 ## Quick Start
@@ -48,12 +58,31 @@ cd ~/projects/your-project
 ai-dotfiles-manager setup
 
 # 4. Select tools (or use "✨ Select All")
-# Creates .claude/, .cursorrules, .kilocode/, .roo/ in your project
+# Creates centralized .dev/rules/ and provider configs pointing to it
 
 # 5. Start coding with AI assistance!
+# Session hooks automatically load rules and commit completed todos
 ```
 
 ## Migrating Existing Configurations
+
+### Migration Script
+
+For existing projects, use the migration script to transition to the new centralized structure:
+
+```bash
+# Run migration script
+npm run migrate
+```
+
+This will:
+1. Detect existing AI tool configurations
+2. Backup existing files with timestamp
+3. Migrate custom rules to `.dev/rules/.local/`
+4. Set up centralized `.dev/rules/` structure
+5. Update provider configurations to point to centralized rules
+6. Remove old duplicated rule folders
+
 
 If you run `ai-dotfiles-manager setup` on a project that already has AI tool configurations (.claude/, .cursorrules, etc.), you'll be prompted with migration options:
 
@@ -158,43 +187,64 @@ ai-dotfiles-manager --help
 
 ## How It Works
 
-### Symlinked Base Rules (Read-Only)
+### Centralized Rules (.dev/rules/)
 
-All base rules are **symlinked** from your project to the global package:
+All rules are **centralized** in `.dev/rules/` and referenced by all AI tools:
 
 ```bash
 # After running "ai-dotfiles-manager setup":
-~/projects/my-project/.claude/rules/shared/ → ~/.npm-global/lib/node_modules/ai-dotfiles-manager/templates/shared/rules
-~/projects/my-project/.claude/rules/typescript/ → ~/.npm-global/lib/node_modules/ai-dotfiles-manager/templates/languages/typescript/rules
+~/projects/my-project/.dev/rules/
+├── shared/              # Language-agnostic rules (symlinked)
+│   ├── clean-architecture.md
+│   ├── repository-pattern.md
+│   └── testing-principles.md
+├── typescript/          # Language-specific rules (symlinked)
+│   ├── coding-standards.md
+│   └── testing.md
+└── .local/             # Project-specific overrides
+    ├── custom-api-standards.md
+    └── architecture.md   # Override shared rules
 ```
 
-**Why symlinks?**
-- ✅ Always up-to-date with team standards
-- ✅ Run `ai-dotfiles-manager update` to get latest rules instantly
-- ✅ No divergence from shared standards
-- ✅ Consistent across all projects
+**Why centralized?**
+- ✅ Single source of truth - no duplication across providers
+- ✅ Update once, applies to all AI tools
+- ✅ Consistent rules across Claude Code, Cursor, Kilo Code, Roo Code
+- ✅ Easier maintenance and management
 
-**Why read-only?**
-- 🔒 Prevents accidental modifications to shared templates
-- 🔒 Forces proper use of `.local/` for customizations
-- 🔒 Makes it clear what's shared vs. project-specific
+### Provider Configurations (Minimal)
 
-### Local Customizations (Writable)
-
-Your project-specific customizations go in `.local/` directories:
+Each AI tool has minimal configuration pointing to `.dev/rules/`:
 
 ```bash
-~/projects/my-project/.claude/rules/.local/
-  ├── README.md                    # Instructions (auto-generated)
-  ├── custom-api-standards.md      # Your custom rules
-  └── architecture.md              # Overrides shared/architecture.md
+.claude/settings.json     # Points to ../.dev/rules/
+.cursorrules            # References ../.dev/rules/ files
+.kilocode/config.json     # Points to ../.dev/rules/
+.roo/config.json         # Points to ../.dev/rules/
 ```
 
 **Benefits:**
-- ✅ Full control over project-specific rules
-- ✅ Commit to version control
-- ✅ Survives package updates
-- ✅ Clear separation from base rules
+- ✅ Provider folders still exist for tool-specific features
+- ✅ All rules loaded from centralized location
+- ✅ No more rule duplication
+- ✅ Easy to maintain and update
+
+### Session Hooks (Automatic)
+
+Session hooks automatically manage your workflow:
+
+```bash
+.dev/hooks/
+├── session-start.js    # Runs when AI session starts
+├── session-end.js      # Runs when AI session ends
+└── todo-commit.js       # Enforces todo commits
+```
+
+**What they do:**
+- ✅ Auto-load `.dev/rules/` into AI context
+- ✅ Update architecture.md when project changes
+- ✅ Commit completed todo items automatically
+- ✅ Track session statistics
 
 ### Windows Support
 
@@ -486,20 +536,20 @@ See `.claude/rules/.local/README.md` (auto-generated) for detailed instructions.
 
 ```gitignore
 # Ignore symlinked base rules (read-only)
-.claude/rules/shared/
-.claude/rules/typescript/
+.dev/rules/shared/
+.dev/rules/typescript/
+.dev/rules/python/
+.dev/rules/go/
+.dev/rules/java/
+.claude/rules/
 .claude/commands/
 .cursorrules
-.kilocode/rules/shared/
-.kilocode/rules/typescript/
-.roo/rules/shared/
-.roo/rules/typescript/
+.kilocode/rules/
+.roo/rules/
 
 # Commit local customizations
-!.claude/rules/.local/
+!.dev/rules/.local/
 !.cursorrules.local
-!.kilocode/rules/.local/
-!.roo/rules/.local/
 
 # Ignore backups (created during migration)
 .claude/.backup/
@@ -507,8 +557,15 @@ See `.claude/rules/.local/README.md` (auto-generated) for detailed instructions.
 .roo/.backup/
 .cursorrules.backup.*
 
+# Ignore session state files (auto-generated)
+.dev/.session-state.json
+.dev/.session-stats.json
+.dev/.last-todo-commit.json
+
 # Developer workspace (personal - usually not committed)
-.dev/
+.dev/todo.md
+.dev/architecture.md
+.dev/hooks/
 ```
 
 ### Why?
