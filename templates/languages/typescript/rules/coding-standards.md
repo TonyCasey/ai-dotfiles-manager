@@ -2,6 +2,27 @@
 
 **Note:** This document covers TypeScript-specific conventions. For universal architecture principles, see `shared/clean-architecture.md`.
 
+---
+
+## 📘 IMPORTANT: TypeScript Configuration
+
+**Before writing TypeScript code, understand your project's configuration:**
+
+See **[TypeScript Configuration Guide](./typescript-config-guide.md)** for:
+- How to configure `tsconfig.json` for development vs. production
+- Common configuration issues and solutions (300+ errors resolved)
+- When to use relaxed vs. strict settings
+- Monorepo configuration best practices
+- When to use `@ts-nocheck` for examples and tests
+
+**Key takeaways:**
+- Start with **relaxed settings** during active development (`strict: false`)
+- Enable **strict mode** when stabilizing for production
+- Use separate `tsconfig.test.json` for tests
+- Explicitly exclude examples, tests, and demo files
+
+---
+
 ## 🚨 CRITICAL: Strict Null Checks
 
 ### ALWAYS Handle Undefined/Null Values

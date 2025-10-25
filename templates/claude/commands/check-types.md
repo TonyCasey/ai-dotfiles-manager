@@ -111,6 +111,11 @@ After seeing these errors, I will write code that:
 3. Removes unused imports/variables
 4. Follows all patterns in .dev/rules/typescript/coding-standards.md
 
+**Configuration Reference:**
+- See `.dev/rules/typescript/typescript-config-guide.md` for comprehensive configuration guidance
+- Learn when to use relaxed vs. strict TypeScript settings
+- Understand common configuration issues that cause 300+ errors
+
 **For IntelliJ Users**:
 The Problems view (Alt+6) in IntelliJ shows:
 - All TypeScript errors (same as `tsc`)
