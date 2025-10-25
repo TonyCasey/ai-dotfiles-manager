@@ -2,12 +2,37 @@
   "rulesDirectory": "../.dev/rules",
   "workflowsDirectory": ".claude/workflows",
   "autoLoadRules": true,
-  "sessionHooks": {
-    "start": ".claude/hooks/session-start.js",
-    "end": ".claude/hooks/session-end.js"
-  },
   "hooks": {
-    "userPromptSubmit": ".claude/hooks/user-prompt-submit.js"
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.js"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-end.js"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/user-prompt-submit.js"
+          }
+        ]
+      }
+    ]
   },
   "excludePatterns": [
     "**/node_modules/**",

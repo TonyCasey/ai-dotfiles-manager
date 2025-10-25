@@ -133,7 +133,7 @@ async function main(isUpdate = false) {
       name: 'tools',
       message: 'Which AI tools would you like to configure? (Space to select)',
       choices: [
-        { name: '✨ Select All', value: 'all', checked: false },
+        { name: '✨ Select All', value: 'all', checked: true },
         new inquirer.Separator(),
         { name: 'Claude Code', value: 'claude', checked: true },
         { name: 'Cursor', value: 'cursor', checked: false },
@@ -237,6 +237,11 @@ async function handleExistingConfig(configDir, toolName) {
       message: `  How would you like to handle existing ${toolName} files?`,
       choices: [
         {
+          name: 'Replace with new setup',
+          value: 'replace',
+          short: 'Replace'
+        },
+        {
           name: 'Migrate to .local/ (your files supersede shared rules)',
           value: 'migrate-supersede',
           short: 'Migrate (supersede)'
@@ -247,17 +252,12 @@ async function handleExistingConfig(configDir, toolName) {
           short: 'Migrate (preserve)'
         },
         {
-          name: 'Replace with new setup (backup old files to .backup/)',
-          value: 'replace',
-          short: 'Replace'
-        },
-        {
           name: 'Skip - keep existing configuration as-is',
           value: 'skip',
           short: 'Skip'
         }
       ],
-      default: 'migrate-supersede'
+      default: 'replace'
     }
   ]);
 
@@ -266,33 +266,9 @@ async function handleExistingConfig(configDir, toolName) {
   }
 
   if (action === 'replace') {
-    // Backup existing files
-    const backupDir = path.join(configDir, '.backup');
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-    const backupPath = path.join(backupDir, timestamp);
-
-    fs.mkdirSync(backupPath, { recursive: true });
-
-    // Copy all files to backup
+    // Remove old files
     const files = fs.readdirSync(configDir);
     for (const file of files) {
-      if (file === '.backup') continue; // Don't backup the backup folder
-      const source = path.join(configDir, file);
-      const dest = path.join(backupPath, file);
-
-      const stats = fs.statSync(source);
-      if (stats.isDirectory()) {
-        copyDirectorySync(source, dest);
-      } else {
-        fs.copyFileSync(source, dest);
-      }
-    }
-
-    console.log(chalk.green(`  ✓ Backed up existing files to ${path.relative(PROJECT_ROOT, backupPath)}`));
-
-    // Remove old files (except backup)
-    for (const file of files) {
-      if (file === '.backup') continue;
       const filePath = path.join(configDir, file);
       const stats = fs.statSync(filePath);
       if (stats.isDirectory()) {
@@ -301,6 +277,8 @@ async function handleExistingConfig(configDir, toolName) {
         fs.unlinkSync(filePath);
       }
     }
+
+    console.log(chalk.green(`  ✓ Removed existing files`));
 
     return 'replace';
   }
@@ -392,6 +370,11 @@ async function handleExistingCursorConfig(cursorRulesPath) {
       message: `  How would you like to handle existing .cursorrules file?`,
       choices: [
         {
+          name: 'Replace with new setup',
+          value: 'replace',
+          short: 'Replace'
+        },
+        {
           name: 'Migrate to .cursorrules.local (your rules supersede shared rules)',
           value: 'migrate-supersede',
           short: 'Migrate (supersede)'
@@ -402,17 +385,12 @@ async function handleExistingCursorConfig(cursorRulesPath) {
           short: 'Migrate (preserve)'
         },
         {
-          name: 'Replace with new setup (backup old file)',
-          value: 'replace',
-          short: 'Replace'
-        },
-        {
           name: 'Skip - keep existing configuration as-is',
           value: 'skip',
           short: 'Skip'
         }
       ],
-      default: 'migrate-supersede'
+      default: 'replace'
     }
   ]);
 
@@ -421,15 +399,9 @@ async function handleExistingCursorConfig(cursorRulesPath) {
   }
 
   if (action === 'replace') {
-    // Backup existing file
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-    const backupPath = path.join(PROJECT_ROOT, `.cursorrules.backup.${timestamp}`);
-
-    fs.copyFileSync(cursorRulesPath, backupPath);
-    console.log(chalk.green(`  ✓ Backed up existing file to .cursorrules.backup.${timestamp}`));
-
     // Remove old file
     fs.unlinkSync(cursorRulesPath);
+    console.log(chalk.green(`  ✓ Removed existing file`));
 
     return 'replace';
   }
@@ -758,7 +730,7 @@ async function setupSymlink(source, target, name, fallbackToCopy = true) {
           type: 'confirm',
           name: 'replace',
           message: `  ${name} exists. Replace with symlink?`,
-          default: false,
+          default: true,
         },
       ]);
 
