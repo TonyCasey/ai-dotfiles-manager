@@ -33,14 +33,16 @@ A dotfiles manager for your AI tools!
 ## Features
 
 - **Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
-- **Claude Code Hooks (.claude/hooks/)**: Automatic session start/end actions with todo commit enforcement
+- **Claude Code Hooks (.claude/hooks/)**: Automatic session start/end actions with todo commit enforcement and current task tracking
+- **Session Status Command**: `/status` slash command to view loaded context and current task anytime
+- **Non-Interactive Mode**: `--yes` flag for automated setup/updates without prompts
 - **Clean Architecture Rules**: Enforce layer separation, dependency inversion, and SOLID principles
 - **Developer Workspace (.dev/)**: Personal workspace with auto-generated architecture docs and todo list
 - **Auto-Context Loading**: AI assistants automatically load centralized rules and project context
+- **Streamlined Updates**: Replace existing files by default (no backups) for faster updates
 - **Migration Support**: Gracefully handles existing AI configurations with 4 migration options
 - **Multi-Language Support**: TypeScript, Python, Go, Java, and more (see [Multi-Language Support](#multi-language-support))
 - **TypeScript Configuration**: Strict tsconfig.json, tsconfig.test.json, tsconfig.eslint.json, and .eslintrc.json automatically added to TypeScript projects
-- **Configuration Backup**: Existing configuration files are automatically backed up with .bak extension before being replaced
 - **Code Quality Rules Guide**: Comprehensive documentation of TypeScript and ESLint rules with error prevention examples
 - **Pre-PR Review Command**: `/review-changes` command for comprehensive code review before pushing changes
 - **Pre-Push Hook**: Automatic review trigger that prevents pushing code with critical issues
@@ -62,14 +64,20 @@ npm install -g ai-dotfiles-manager
 # 2. Navigate to your project
 cd ~/projects/your-project
 
-# 3. Run setup
+# 3. Run setup (interactive)
 ai-dotfiles-manager setup
+
+# Or run non-interactive setup with defaults
+ai-dotfiles-manager setup --yes
 
 # 4. Select tools (or use "✨ Select All")
 # Creates centralized .dev/rules/ and provider configs pointing to it
 
 # 5. Start coding with AI assistance!
 # Claude Code hooks automatically load rules and commit completed todos
+
+# 6. Check session status anytime
+# Type /status in Claude Code to see loaded context and current task
 ```
 
 ## Migrating Existing Configurations
@@ -106,10 +114,9 @@ If you run `ai-dotfiles-manager setup` on a project that already has AI tool con
 - Your custom rules exist alongside shared rules (no override)
 - Best for: Projects with additional custom rules
 
-**3. Replace with new setup (backup old files)**
-- Creates timestamped backups of existing files
-- Replaces everything with fresh templates
-- Best for: Starting fresh while keeping a backup
+**3. Replace with new setup**
+- Replaces everything with fresh templates (default option)
+- Best for: Quick updates or starting fresh
 
 **4. Skip - keep existing configuration as-is**
 - Leaves current configuration untouched
@@ -122,28 +129,18 @@ If you run `ai-dotfiles-manager setup` on a project that already has AI tool con
 ```bash
 # Existing custom rules moved to:
 .dev/rules/.local/your-custom-rule.md
-
-# Backups created in:
-.claude/.backup/2025-10-20/
 ```
 
 **Cursor (.cursorrules)**
 ```bash
 # Existing file moved to:
 .cursorrules.local
-
-# Backup created as:
-.cursorrules.backup.2025-10-20
 ```
 
 **Kilo Code (.kilocode/) and Roo Code (.roo/)**
 ```bash
 # Existing custom rules moved to:
 .dev/rules/.local/your-custom-rule.md
-
-# Backups created in:
-.kilocode/.backup/2025-10-20/
-.roo/.backup/2025-10-20/
 ```
 
 ## Why Global Installation?
@@ -250,6 +247,7 @@ Claude Code hooks automatically manage your workflow:
 **What they do:**
 - ✅ Auto-load `.dev/rules/` into AI context on session start
 - ✅ Display project context (architecture, todos, git status)
+- ✅ Extract and track current task from `todo.md`
 - ✅ Commit completed todo items automatically on session end
 - ✅ Track session statistics and duration
 - ✅ Validate prompts for destructive operations (optional)
@@ -428,12 +426,22 @@ type productRepository struct {
 Set up AI assistant configuration in the current project:
 
 ```bash
+# Interactive setup
 ai-dotfiles-manager setup
+
+# Non-interactive setup (uses defaults)
+ai-dotfiles-manager setup --yes
+ai-dotfiles-manager setup -y
 ```
 
-Interactive prompts will ask:
+**Interactive mode** prompts will ask:
 - Which language? (auto-detected, or choose manually)
 - Which AI tools? (Claude Code, Cursor, Kilo Code, Roo Code, or ✨ Select All)
+
+**Non-interactive mode** (`--yes` flag):
+- Uses detected language (defaults to TypeScript if not detected)
+- Configures Claude Code only
+- Perfect for CI/CD pipelines and automated setups
 
 Creates configuration files in your project directory.
 
@@ -442,10 +450,16 @@ Creates configuration files in your project directory.
 Update existing configuration with latest templates:
 
 ```bash
+# Interactive update
 ai-dotfiles-manager update
+
+# Non-interactive update (uses defaults)
+ai-dotfiles-manager update --yes
+ai-dotfiles-manager update -y
 ```
 
 Refreshes symlinked base rules while preserving your `.local/` customizations.
+By default, replaces existing files without creating backups for streamlined updates.
 
 ### `review` - Code Review
 
@@ -485,6 +499,14 @@ ai-dotfiles-manager --help
 ## Slash Commands (Claude Code)
 
 After setup, use these commands in Claude Code:
+
+### `/status`
+Display current session status:
+- Project name and time
+- Loaded context (rules, architecture, todos)
+- Current task from todo.md
+- Git working directory status
+- Beautifully formatted output
 
 ### `/create-repo`
 Creates a repository following Clean Architecture:
@@ -894,6 +916,16 @@ ai-dotfiles-manager setup
 MIT License - See LICENSE file for details.
 
 ## Changelog
+
+### 1.10.0
+- **Improved Package Update Flow** - Streamlined updates and session management
+  - Made "replace existing" the default option during package updates (no backups)
+  - Added `--yes` / `-y` flag for non-interactive setup and updates
+  - Fixed hooks format in settings.json for new Claude Code hooks API
+  - Enhanced session-start hook with current task detection from todo.md
+  - Added `/status` slash command for on-demand session info display
+  - Improved visual formatting in session hooks with better banners
+  - Updated help documentation with non-interactive mode examples
 
 ### 1.8.1
 - **Removed Redundant Code** - Cleanup and optimization release

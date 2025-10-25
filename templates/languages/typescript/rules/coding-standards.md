@@ -2,6 +2,149 @@
 
 **Note:** This document covers TypeScript-specific conventions. For universal architecture principles, see `shared/clean-architecture.md`.
 
+## 🚨 CRITICAL: Strict Null Checks
+
+### ALWAYS Handle Undefined/Null Values
+
+**TypeScript strict mode will cause compile errors if you don't explicitly handle `undefined` and `null`.**
+
+This is the #1 source of TypeScript errors. Every value that might be undefined MUST be checked before use.
+
+#### Common Errors and Fixes
+
+**❌ ERROR: TS2532 "Object is possibly 'undefined'"**
+
+```typescript
+// ❌ BAD - Will cause TS2532 error
+function processUser(user: User | undefined) {
+  return user.name;  // ERROR: Object is possibly 'undefined'
+}
+
+// ✅ FIX #1 - Null check
+function processUser(user: User | undefined) {
+  if (!user) {
+    throw new UserNotFoundError();
+  }
+  return user.name;  // ✅ TypeScript knows user is defined here
+}
+
+// ✅ FIX #2 - Optional chaining
+function processUser(user: User | undefined): string | undefined {
+  return user?.name;  // Returns undefined if user is undefined
+}
+
+// ✅ FIX #3 - Nullish coalescing
+function processUser(user: User | undefined): string {
+  return user?.name ?? 'Unknown';  // Returns 'Unknown' if undefined
+}
+
+// ✅ FIX #4 - Type guard
+function processUser(user: User | undefined): string {
+  if (user === undefined) {
+    return 'Unknown';
+  }
+  return user.name;  // ✅ user is User here
+}
+```
+
+**❌ ERROR: TS2345 "Type 'X | undefined' is not assignable to parameter of type 'X'"**
+
+```typescript
+// ❌ BAD - Passing possibly undefined to function expecting defined value
+function sendEmail(email: string) { /* ... */ }
+
+const user: User | undefined = await getUser(id);
+sendEmail(user.email);  // ERROR: user is possibly undefined
+
+// ✅ FIX #1 - Check before passing
+const user = await getUser(id);
+if (!user) {
+  throw new UserNotFoundError(id);
+}
+sendEmail(user.email);  // ✅ TypeScript knows user is defined
+
+// ✅ FIX #2 - Early return
+const user = await getUser(id);
+if (!user) return;
+sendEmail(user.email);  // ✅ TypeScript knows user is defined
+
+// ✅ FIX #3 - Guard clause
+const user = await getUser(id);
+if (user === undefined) {
+  throw new UserNotFoundError(id);
+}
+sendEmail(user.email);  // ✅ TypeScript knows user is User
+```
+
+#### Array Operations
+
+**❌ BAD - .find() returns undefined**
+```typescript
+const users: User[] = [/* ... */];
+const user = users.find(u => u.id === targetId);
+processUser(user);  // ERROR: user might be undefined
+
+// ✅ GOOD - Check result
+const user = users.find(u => u.id === targetId);
+if (!user) {
+  throw new UserNotFoundError(targetId);
+}
+processUser(user);  // ✅ user is User
+```
+
+#### Object Property Access
+
+**❌ BAD - Accessing nested properties**
+```typescript
+const name = user.profile.name;  // ERROR: profile might be undefined
+
+// ✅ GOOD - Optional chaining
+const name = user.profile?.name;  // Returns undefined if profile is undefined
+const name = user.profile?.name ?? 'Unknown';  // Default value
+```
+
+#### Function Return Values
+
+**When repository methods return `T | null`, ALWAYS check the result:**
+
+```typescript
+// Repository method signature
+interface IUserRepository {
+  getById(id: string): Promise<User | null>;  // Can return null!
+}
+
+// ❌ BAD - Not checking for null
+async function getUser(id: string): Promise<User> {
+  const user = await userRepository.getById(id);
+  return user;  // ERROR: Type 'User | null' is not assignable to 'User'
+}
+
+// ✅ GOOD - Check and throw
+async function getUser(id: string): Promise<User> {
+  const user = await userRepository.getById(id);
+  if (!user) {
+    throw new UserNotFoundError(id);
+  }
+  return user;  // ✅ TypeScript knows user is User, not null
+}
+
+// ✅ GOOD - Return nullable type
+async function getUser(id: string): Promise<User | null> {
+  return await userRepository.getById(id);  // Explicitly nullable return
+}
+```
+
+### MANDATORY Checks for Every Potentially Undefined Value
+
+**Before using ANY value that might be undefined, you MUST:**
+
+1. **Check if it exists**: `if (!value) { ... }`
+2. **Use optional chaining**: `value?.property`
+3. **Provide a default**: `value ?? defaultValue`
+4. **Use a type guard**: `if (value === undefined) { ... }`
+
+**No exceptions. TypeScript will not compile otherwise.**
+
 ## Type Safety
 
 ### Strict Mode

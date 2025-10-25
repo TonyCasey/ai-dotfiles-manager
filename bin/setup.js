@@ -17,6 +17,8 @@ const getPackageRoot = () => {
 // Parse command line arguments
 const args = process.argv.slice(2);
 const command = args[0];
+const flags = args.filter(arg => arg.startsWith('-'));
+const AUTO_YES = flags.includes('--yes') || flags.includes('-y');
 
 // Handle commands
 if (command === '--version' || command === '-v') {
@@ -41,7 +43,7 @@ if (command === 'review') {
   });
 } else if (command === 'init' || command === 'setup' || command === 'update' || !command) {
   const isUpdate = command === 'update';
-  main(isUpdate).catch((error) => {
+  main(isUpdate, AUTO_YES).catch((error) => {
     console.error(chalk.red(`\n❌ Error during ${isUpdate ? 'update' : 'setup'}:`), error);
     process.exit(1);
   });
@@ -62,13 +64,16 @@ function printHelp() {
   console.log(chalk.gray('  commit-todo       Enforce todo commit policy'));
   console.log(chalk.gray('  --version, -v     Show version number'));
   console.log(chalk.gray('  --help, -h        Show this help message\n'));
+  console.log(chalk.white('Global Options:'));
+  console.log(chalk.gray('  --yes, -y         Accept all defaults, skip interactive prompts\n'));
   console.log(chalk.white('Review Options:'));
   console.log(chalk.gray('  --detailed        Show detailed information including info-level messages'));
   console.log(chalk.gray('  --json            Output results as JSON'));
   console.log(chalk.gray('  --fix             Auto-fix simple issues (not implemented yet)\n'));
   console.log(chalk.white('Examples:'));
   console.log(chalk.gray('  ai-dotfiles-manager setup           # Interactive setup wizard'));
-  console.log(chalk.gray('  ai-dotfiles-manager update          # Update existing configuration'));
+  console.log(chalk.gray('  ai-dotfiles-manager setup --yes     # Non-interactive setup with defaults'));
+  console.log(chalk.gray('  ai-dotfiles-manager update -y       # Non-interactive update'));
   console.log(chalk.gray('  ai-dotfiles-manager                 # Same as "ai-dotfiles-manager setup"'));
   console.log(chalk.gray('  ai-dotfiles-manager review          # Run code review'));
   console.log(chalk.gray('  ai-dotfiles-manager review --detailed   # Show all details'));
@@ -79,9 +84,13 @@ function printHelp() {
   console.log(chalk.gray('  https://github.com/tony.casey/ai-dotfiles-manager\n'));
 }
 
-async function main(isUpdate = false) {
+async function main(isUpdate = false, autoYes = false) {
   const action = isUpdate ? 'Update' : 'Setup';
   console.log(chalk.blue.bold(`\n🤖 AI Dotfiles Manager ${action}\n`));
+
+  if (autoYes) {
+    console.log(chalk.gray('Running in non-interactive mode (--yes flag)\n'));
+  }
 
   if (isUpdate) {
     console.log(chalk.gray('Updating existing configuration with latest templates...\n'));
@@ -93,68 +102,87 @@ async function main(isUpdate = false) {
 
   if (detectedLanguage) {
     console.log(chalk.gray(`Detected language: ${detectedLanguage}\n`));
-    const { confirmLanguage } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirmLanguage',
-        message: `Use ${detectedLanguage} for this project?`,
-        default: true,
-      },
-    ]);
 
-    if (confirmLanguage) {
+    if (autoYes) {
       language = detectedLanguage;
+      console.log(chalk.gray(`Using detected language: ${detectedLanguage}\n`));
+    } else {
+      const { confirmLanguage } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmLanguage',
+          message: `Use ${detectedLanguage} for this project?`,
+          default: true,
+        },
+      ]);
+
+      if (confirmLanguage) {
+        language = detectedLanguage;
+      }
     }
   }
 
   if (!language) {
-    // Ask user to select language
-    const { selectedLanguage } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'selectedLanguage',
-        message: 'What language is your project?',
-        choices: [
-          { name: 'TypeScript', value: 'typescript' },
-          { name: 'Python', value: 'python' },
-          { name: 'JavaScript', value: 'javascript' },
-        ],
-      },
-    ]);
-    language = selectedLanguage;
+    if (autoYes) {
+      // Default to typescript if no language detected and --yes flag
+      language = 'typescript';
+      console.log(chalk.gray('No language detected, defaulting to TypeScript\n'));
+    } else {
+      // Ask user to select language
+      const { selectedLanguage } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'selectedLanguage',
+          message: 'What language is your project?',
+          choices: [
+            { name: 'TypeScript', value: 'typescript' },
+            { name: 'Python', value: 'python' },
+            { name: 'JavaScript', value: 'javascript' },
+          ],
+        },
+      ]);
+      language = selectedLanguage;
+    }
   }
 
   console.log('');
 
   // Ask which AI tools to configure
-  const { tools: selectedTools } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'tools',
-      message: 'Which AI tools would you like to configure? (Space to select)',
-      choices: [
-        { name: '✨ Select All', value: 'all', checked: true },
-        new inquirer.Separator(),
-        { name: 'Claude Code', value: 'claude', checked: true },
-        { name: 'Cursor', value: 'cursor', checked: false },
-        { name: 'Kilo Code', value: 'kilo', checked: false },
-        { name: 'Roo Code', value: 'roo', checked: false },
-      ],
-    },
-  ]);
-
-  // Handle "Select All" option
   let tools;
-  if (selectedTools.includes('all')) {
-    tools = ['claude', 'cursor', 'kilo', 'roo'];
-    console.log(chalk.gray('\n  → All tools selected'));
-  } else {
-    tools = selectedTools;
-  }
 
-  if (tools.length === 0) {
-    console.log(chalk.yellow('No tools selected. Exiting.'));
-    return;
+  if (autoYes) {
+    // Default to Claude Code only with --yes flag
+    tools = ['claude'];
+    console.log(chalk.gray('Defaulting to Claude Code\n'));
+  } else {
+    const { tools: selectedTools } = await inquirer.prompt([
+      {
+        type: 'checkbox',
+        name: 'tools',
+        message: 'Which AI tools would you like to configure? (Space to select)',
+        choices: [
+          { name: '✨ Select All', value: 'all', checked: true },
+          new inquirer.Separator(),
+          { name: 'Claude Code', value: 'claude', checked: true },
+          { name: 'Cursor', value: 'cursor', checked: false },
+          { name: 'Kilo Code', value: 'kilo', checked: false },
+          { name: 'Roo Code', value: 'roo', checked: false },
+        ],
+      },
+    ]);
+
+    // Handle "Select All" option
+    if (selectedTools.includes('all')) {
+      tools = ['claude', 'cursor', 'kilo', 'roo'];
+      console.log(chalk.gray('\n  → All tools selected'));
+    } else {
+      tools = selectedTools;
+    }
+
+    if (tools.length === 0) {
+      console.log(chalk.yellow('No tools selected. Exiting.'));
+      return;
+    }
   }
 
   console.log('');
