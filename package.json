@@ -1,6 +1,6 @@
 {
   "name": "ai-dotfiles-manager",
-  "version": "1.8.1",
+  "version": "1.10.0",
   "description": "Centralized AI assistant configuration manager. Sync rules, slash commands, and workflows across Claude Code, Cursor, Kilo Code, and Roo Code. One setup, consistent AI assistance in all projects with centralized .dev/rules/ and automatic session hooks.",
   "bin": {
     "ai-dotfiles-manager": "./bin/setup.js"
