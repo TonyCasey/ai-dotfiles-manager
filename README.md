@@ -8,29 +8,32 @@ Sick of .files folder overload and having to copy and paste tour rules, workflow
 
 ```bash
 
-    ├── .claude/              # Claude Code config (points to .dev/rules/)
+    ├── .claude/              # Claude Code config
+    │   ├── hooks/           # Session automation scripts
+    │   ├── commands/        # Slash commands (global)
+    │   └── settings.json    # Points to ../.dev/rules/
     ├── .cursorrules           # Cursor config (points to .dev/rules/)
     ├── .kilocode/           # Kilo Code config (points to .dev/rules/)
     ├── .roo/                # Roo Code config (points to .dev/rules/)
     └── .dev/                # Centralized rules and workspace
         ├── rules/            # Centralized rule repository
-        │   ├── shared/      # Language-agnostic rules
-        │   ├── typescript/   # Language-specific rules
+        │   ├── shared/      # Language-agnostic rules (symlinked)
+        │   ├── typescript/   # Language-specific rules (symlinked)
         │   └── .local/      # Project-specific overrides
-        ├── hooks/            # Session automation scripts
+        ├── architecture.md   # Auto-generated project overview
         └── todo.md           # Developer task list
 ```
 
 This package provides **centralized configurations** for AI coding CLI assistants (Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.
 
-**Key Innovation**: All rules are now centralized in `.dev/rules/` instead of duplicated across provider folders. Session hooks automatically load rules and commit completed tasks.
+**Key Innovation**: All rules are centralized in `.dev/rules/` instead of duplicated across provider folders. Claude Code hooks (in `.claude/hooks/`) automatically load rules and commit completed tasks.
 
 A dotfiles manager for your AI tools!
 
 ## Features
 
 - **Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
-- **Session Hooks**: Automatic start/end actions with todo commit enforcement
+- **Claude Code Hooks (.claude/hooks/)**: Automatic session start/end actions with todo commit enforcement
 - **Clean Architecture Rules**: Enforce layer separation, dependency inversion, and SOLID principles
 - **Developer Workspace (.dev/)**: Personal workspace with auto-generated architecture docs and todo list
 - **Auto-Context Loading**: AI assistants automatically load centralized rules and project context
@@ -48,7 +51,7 @@ A dotfiles manager for your AI tools!
 - **Multi-Tool Support**: Works with Claude Code, Cursor, Kilo Code, and Roo Code
 - **Global Installation**: Install once, use in all your projects
 - **Automatic Todo Commits**: Enforces git commits when tasks are completed
-- **Comprehensive Test Suite**: 53+ tests following SOLID principles and best practices
+- **Comprehensive Test Suite**: 78+ tests following SOLID principles and best practices
 
 ## Quick Start
 
@@ -66,7 +69,7 @@ ai-dotfiles-manager setup
 # Creates centralized .dev/rules/ and provider configs pointing to it
 
 # 5. Start coding with AI assistance!
-# Session hooks automatically load rules and commit completed todos
+# Claude Code hooks automatically load rules and commit completed todos
 ```
 
 ## Migrating Existing Configurations
@@ -117,8 +120,8 @@ If you run `ai-dotfiles-manager setup` on a project that already has AI tool con
 
 **Claude Code (.claude/)**
 ```bash
-# Existing files moved to:
-.claude/rules/.local/your-custom-rule.md
+# Existing custom rules moved to:
+.dev/rules/.local/your-custom-rule.md
 
 # Backups created in:
 .claude/.backup/2025-10-20/
@@ -135,9 +138,8 @@ If you run `ai-dotfiles-manager setup` on a project that already has AI tool con
 
 **Kilo Code (.kilocode/) and Roo Code (.roo/)**
 ```bash
-# Existing files moved to:
-.kilocode/rules/.local/your-custom-rule.md
-.roo/rules/.local/your-custom-rule.md
+# Existing custom rules moved to:
+.dev/rules/.local/your-custom-rule.md
 
 # Backups created in:
 .kilocode/.backup/2025-10-20/
@@ -234,22 +236,24 @@ Each AI tool has minimal configuration pointing to `.dev/rules/`:
 - ✅ No more rule duplication
 - ✅ Easy to maintain and update
 
-### Session Hooks (Automatic)
+### Claude Code Hooks (Automatic)
 
-Session hooks automatically manage your workflow:
+Claude Code hooks automatically manage your workflow:
 
 ```bash
-.dev/hooks/
-├── session-start.js    # Runs when AI session starts
-├── session-end.js      # Runs when AI session ends
-└── todo-commit.js       # Enforces todo commits
+.claude/hooks/
+├── session-start.js       # Runs when Claude Code session starts
+├── session-end.js         # Runs when Claude Code session ends
+└── user-prompt-submit.js  # Validates/enhances prompts (optional)
 ```
 
 **What they do:**
-- ✅ Auto-load `.dev/rules/` into AI context
-- ✅ Update architecture.md when project changes
-- ✅ Commit completed todo items automatically
-- ✅ Track session statistics
+- ✅ Auto-load `.dev/rules/` into AI context on session start
+- ✅ Display project context (architecture, todos, git status)
+- ✅ Commit completed todo items automatically on session end
+- ✅ Track session statistics and duration
+- ✅ Validate prompts for destructive operations (optional)
+- ✅ Suggest relevant context files (optional)
 
 ### Windows Support
 
@@ -514,26 +518,30 @@ Generates test files:
 
 ### Adding Custom Rules
 
-Create new files in `.local/` directories:
+Create new files in `.dev/rules/.local/`:
 
 ```bash
-.claude/rules/.local/
+.dev/rules/.local/
   ├── custom-api-standards.md
   └── database-conventions.md
 ```
+
+These custom rules are automatically loaded by all AI tools alongside the base rules.
 
 ### Overriding Base Rules
 
 Create a file with the same name in `.local/`:
 
 ```bash
-.claude/rules/.local/
+.dev/rules/.local/
   └── architecture.md    # Overrides shared/architecture.md
 ```
 
+Your local version will take precedence over the base rule with the same name.
+
 ### Instructions
 
-See `.claude/rules/.local/README.md` (auto-generated) for detailed instructions.
+See `.dev/rules/.local/README.md` (auto-generated) for detailed instructions.
 
 ## Version Control
 
@@ -546,31 +554,27 @@ See `.claude/rules/.local/README.md` (auto-generated) for detailed instructions.
 .dev/rules/python/
 .dev/rules/go/
 .dev/rules/java/
-.claude/rules/
-.claude/commands/
+
+# Ignore provider configs (auto-generated from templates)
+.claude/
 .cursorrules
-.kilocode/rules/
-.roo/rules/
+.kilocode/
+.roo/
 
 # Commit local customizations
 !.dev/rules/.local/
-!.cursorrules.local
 
 # Ignore backups (created during migration)
-.claude/.backup/
-.kilocode/.backup/
-.roo/.backup/
-.cursorrules.backup.*
+*.backup.*
 
 # Ignore session state files (auto-generated)
 .dev/.session-state.json
 .dev/.session-stats.json
-.dev/.last-todo-commit.json
+.dev/.prompt-log.jsonl
 
 # Developer workspace (personal - usually not committed)
 .dev/todo.md
 .dev/architecture.md
-.dev/hooks/
 ```
 
 ### Why?
@@ -628,10 +632,11 @@ cd ~/projects/my-other-project && ai-dotfiles-manager update
 
 The package includes a comprehensive test suite ensuring reliability and maintainability:
 
-- **53+ Unit Tests** - Comprehensive coverage of core functionality
+- **78+ Unit Tests** - Comprehensive coverage of core functionality including hooks
 - **100% Coverage** - Language detection module fully tested
+- **Hook Testing** - All Claude Code hooks have dedicated test suites
 - **SOLID Principles** - Tests follow the same principles as production code
-- **Fast Execution** - Full test suite runs in < 1 second
+- **Fast Execution** - Full test suite runs in < 2 seconds
 - **CI/CD Ready** - Proper exit codes and coverage reporting
 
 ```bash
@@ -706,15 +711,15 @@ ls -la .claude/rules/
 ### Can't Edit Base Rules
 
 This is intentional! Base rules are read-only symlinks. To customize:
-1. Create files in `.claude/rules/.local/`
-2. See `.claude/rules/.local/README.md` for instructions
+1. Create files in `.dev/rules/.local/`
+2. See `.dev/rules/.local/README.md` for instructions
 3. Your `.local/` files take precedence over base rules
 
 ### Rules Not Being Applied
 
 If AI isn't following the rules:
-1. Check `.claude/rules/` directory exists
-2. Verify `settings.json` has correct `rulesDirectory` path
+1. Check `.dev/rules/` directory exists and has content
+2. Verify `.claude/settings.json` has correct `rulesDirectory` path (`../.dev/rules`)
 3. Try explicitly referencing a rule file in your prompt
 4. Restart your AI coding assistant
 
@@ -795,14 +800,22 @@ ai-dotfiles-manager/
 │   └── review.js             # Code review engine
 ├── templates/
 │   ├── shared/               # Language-agnostic rules
+│   │   └── rules/
 │   ├── languages/            # Language-specific rules
-│   ├── claude/               # Claude Code config
+│   │   ├── typescript/rules/
+│   │   └── python/rules/
+│   ├── dev/                  # .dev/ workspace templates
+│   ├── claude/               # Claude Code config + hooks
+│   │   ├── hooks/
+│   │   ├── commands/
+│   │   └── settings.json
 │   ├── cursor/               # Cursor config
 │   ├── kilocode/             # Kilo Code config
 │   └── roo/                  # Roo Code config
 ├── __tests__/
 │   ├── helpers/              # Test utilities (fs-mock, etc.)
 │   ├── fixtures/             # Test data and sample structures
+│   ├── hooks/                # Tests for Claude Code hooks
 │   ├── lib/                  # Tests for lib modules
 │   ├── scripts/              # Tests for scripts
 │   ├── setup.js              # Jest setup
@@ -814,7 +827,7 @@ ai-dotfiles-manager/
 
 ### Testing
 
-The package includes a comprehensive test suite with 53+ tests following SOLID principles:
+The package includes a comprehensive test suite with 78+ tests following SOLID principles:
 
 ```bash
 # Run all tests
@@ -832,8 +845,9 @@ npm run test:verbose
 
 **Test Coverage:**
 - Language Detector: 100% ✅
+- Claude Code Hooks: 100% ✅
 - Code Reviewer: 27.82%
-- Overall: Growing coverage with every release
+- Overall: 5 test suites, 78 passing tests
 
 **Testing Principles:**
 - AAA Pattern (Arrange, Act, Assert)
@@ -880,6 +894,26 @@ ai-dotfiles-manager setup
 MIT License - See LICENSE file for details.
 
 ## Changelog
+
+### 1.8.1
+- **Removed Redundant Code** - Cleanup and optimization release
+  - Removed duplicate provider-specific rules folders (7,248 lines deleted)
+  - Removed unused `.claude/rules/` setup code
+  - Single source of truth for all rules in `.dev/rules/`
+  - All providers consistently reference `.dev/rules/`
+
+### 1.8.0
+- **Claude Code Hooks System** - Comprehensive hook implementation
+  - Added `session-start.js` - Loads context and displays session info
+  - Added `session-end.js` - Auto-commits todos and tracks statistics
+  - Added `user-prompt-submit.js` - Validates and enhances prompts (optional)
+  - Hooks located in `templates/claude/hooks/` → `.claude/hooks/`
+  - Updated `settings.json` to reference `.claude/hooks/`
+- **Hook Testing** - 25 new tests for hook functionality
+  - session-start.test.js (8 tests)
+  - session-end.test.js (8 tests)
+  - user-prompt-submit.test.js (12 tests)
+  - Test suite expanded from 53 to 78 tests
 
 ### 1.3.0
 - **Added Migration Support** - Graceful handling of existing AI configurations
