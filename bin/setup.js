@@ -482,57 +482,6 @@ async function setupClaude(method, language) {
     console.log(chalk.gray('  Created .claude directory'));
   }
 
-  // Set up rules directory structure
-  const rulesDir = path.join(claudeDir, 'rules');
-
-  // Create rules directory
-  if (!fs.existsSync(rulesDir)) {
-    fs.mkdirSync(rulesDir, { recursive: true });
-  }
-
-  // Symlink shared rules
-  const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
-  const sharedRulesDest = path.join(rulesDir, 'shared');
-  const sharedResult = await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
-
-  // Symlink language-specific rules
-  const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
-  const languageRulesDest = path.join(rulesDir, language);
-  let languageResult = { usedCopy: false };
-
-  if (fs.existsSync(languageRulesSource)) {
-    languageResult = await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
-  } else {
-    console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
-  }
-
-  // Create .local directory for custom rules
-  const rulesLocalDir = path.join(rulesDir, '.local');
-  if (!fs.existsSync(rulesLocalDir)) {
-    fs.mkdirSync(rulesLocalDir, { recursive: true });
-    console.log(chalk.green('  ✓ Created .local/ for custom rules'));
-  }
-
-  // Create README in .local directory
-  createLocalReadme(rulesLocalDir, 'Claude Code');
-
-  // If we used copying instead of symlinks, create the sync script
-  if (sharedResult.usedCopy || languageResult.usedCopy) {
-    const scriptsDir = path.join(claudeDir, 'scripts');
-    if (!fs.existsSync(scriptsDir)) {
-      fs.mkdirSync(scriptsDir, { recursive: true });
-    }
-
-    const syncScriptSource = path.join(templateDir, 'scripts', 'sync-rules.js');
-    const syncScriptDest = path.join(scriptsDir, 'sync-rules.js');
-
-    if (fs.existsSync(syncScriptSource)) {
-      fs.copyFileSync(syncScriptSource, syncScriptDest);
-      console.log(chalk.blue('  ✓ Added sync-rules.js script for Windows compatibility'));
-      console.log(chalk.gray('    Run "node .claude/scripts/sync-rules.js" to update rules'));
-    }
-  }
-
   // Set up global commands directory (user-level, not project-level)
   const globalCommandsDir = path.join(require('os').homedir(), '.claude', 'commands');
   const templateCommandsDir = path.join(templateDir, 'commands');
