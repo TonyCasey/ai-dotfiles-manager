@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.8.1] - 2024-10-25
+
+### Removed
+- **Redundant Provider Rules Folders**: Removed duplicate rule directories
+  - Deleted `templates/claude/rules/` (10 files)
+  - Deleted `templates/kilocode/rules/` (5 files)
+  - Deleted `templates/roo/rules/` (5 files)
+  - Deleted `templates/dev/hooks/` (4 files, superseded by `templates/claude/hooks/`)
+- **Redundant Setup Code**: Removed `.claude/rules/` setup from `setupClaude()` function
+  - Removed ~50 lines of duplicate code that created unused `.claude/rules/` directory
+  - Rules are now managed exclusively through `.dev/rules/` (single source of truth)
+
+### Benefits
+- ✅ Eliminated 7,248 lines of duplicate content
+- ✅ Cleaner, more maintainable codebase
+- ✅ Single source of truth for all rules (`templates/shared/rules/` and `templates/languages/{language}/rules/`)
+- ✅ Clearer architecture with no confusion about where rules live
+- ✅ All providers reference `.dev/rules/` consistently
+
 ## [1.8.0] - 2024-10-25
 
 ### Added
