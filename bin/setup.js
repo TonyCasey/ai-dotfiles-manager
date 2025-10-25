@@ -1032,40 +1032,7 @@ async function setupCentralizedRules(language, isUpdate) {
     console.log(chalk.green('  ✓ Created .dev/rules/README.md'));
   }
 
-  // Set up hooks directory
-  await setupHooks(devDir);
-
   console.log(chalk.green('  ✓ Centralized rules set up'));
-}
-
-function setupHooks(devDir) {
-  const hooksDir = path.join(devDir, 'hooks');
-
-  // Create hooks directory
-  if (!fs.existsSync(hooksDir)) {
-    fs.mkdirSync(hooksDir, { recursive: true });
-    console.log(chalk.green('  ✓ Created .dev/hooks/ directory'));
-  }
-
-  // Copy hook scripts from templates
-  const hooksSourceDir = path.join(TEMPLATES_DIR, 'dev', 'hooks');
-  const hooks = ['session-start.js', 'session-end.js', 'todo-commit.js', 'pre-push-review.md'];
-
-  hooks.forEach(hook => {
-    const sourcePath = path.join(hooksSourceDir, hook);
-    const destPath = path.join(hooksDir, hook);
-
-    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
-      fs.copyFileSync(sourcePath, destPath);
-      // Make hooks executable on Unix systems
-      try {
-        fs.chmodSync(destPath, 0o755);
-      } catch (error) {
-        // Ignore permission errors on Windows
-      }
-      console.log(chalk.green(`  ✓ Created ${hook}`));
-    }
-  });
 }
 
 async function setupTypeScriptConfig(isUpdate) {
