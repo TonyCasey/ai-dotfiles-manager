@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2024-10-25
+
+### Added
+- **Claude Code Hooks**: Comprehensive hook system for Claude Code in `templates/claude/hooks/`
+  - `session-start.js`: Loads project context, rules, and displays session information
+  - `session-end.js`: Auto-commits completed todos and tracks session statistics
+  - `user-prompt-submit.js`: Validates, enhances, and logs user prompts (optional)
+  - `README.md`: Complete documentation for hooks configuration and customization
+- **Hook Setup Integration**: Modified `bin/setup.js` to copy hooks to `.claude/hooks/` during setup
+  - Preserves existing custom hooks (won't overwrite on re-setup)
+  - Makes hook scripts executable on Unix systems
+  - Displays helpful messages about hook functionality
+
+### Changed
+- **Settings.json Template**: Updated to reference `.claude/hooks/` instead of `../.dev/hooks/`
+  - `sessionHooks.start`: `.claude/hooks/session-start.js`
+  - `sessionHooks.end`: `.claude/hooks/session-end.js`
+  - Added `hooks.userPromptSubmit`: `.claude/hooks/user-prompt-submit.js` (optional)
+
+### Benefits
+- ✅ Project-specific hooks that can be customized per project
+- ✅ Automatic todo commit on session end
+- ✅ Session tracking and statistics
+- ✅ Context loading on every session start
+- ✅ Optional prompt validation and enhancement
+- ✅ Comprehensive documentation for hook customization
+
 ## [1.7.0] - 2024-10-24
 
 ### Changed

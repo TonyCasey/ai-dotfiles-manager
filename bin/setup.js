@@ -567,6 +567,41 @@ async function setupClaude(method, language) {
     await setupSymlink(templateWorkflowsDir, workflowsDir, 'workflows directory');
   }
 
+  // Set up hooks directory
+  const hooksDir = path.join(claudeDir, 'hooks');
+  const templateHooksDir = path.join(templateDir, 'hooks');
+
+  if (fs.existsSync(templateHooksDir) && fs.readdirSync(templateHooksDir).length > 0) {
+    // Create hooks directory if it doesn't exist
+    if (!fs.existsSync(hooksDir)) {
+      fs.mkdirSync(hooksDir, { recursive: true });
+    }
+
+    // Copy hook files (not symlink - projects may customize hooks)
+    const hookFiles = fs.readdirSync(templateHooksDir);
+    for (const file of hookFiles) {
+      const source = path.join(templateHooksDir, file);
+      const dest = path.join(hooksDir, file);
+
+      // Only copy if doesn't exist (preserve custom hooks)
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(source, dest);
+
+        // Make hooks executable on Unix systems
+        if (file.endsWith('.js')) {
+          try {
+            fs.chmodSync(dest, 0o755);
+          } catch (error) {
+            // Ignore permission errors on Windows
+          }
+        }
+
+        console.log(chalk.green(`  ✓ Copied ${file} to hooks/`));
+      }
+    }
+    console.log(chalk.blue('  ℹ Hooks will run automatically on session start/end'));
+  }
+
   // Copy settings.json if it exists in template (do not symlink - each project needs its own)
   const settingsTemplate = path.join(templateDir, 'settings.json');
   const settingsTarget = path.join(claudeDir, 'settings.json');

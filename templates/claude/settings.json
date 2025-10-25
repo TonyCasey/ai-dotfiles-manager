@@ -3,8 +3,11 @@
   "workflowsDirectory": ".claude/workflows",
   "autoLoadRules": true,
   "sessionHooks": {
-    "start": "../.dev/hooks/session-start.js",
-    "end": "../.dev/hooks/session-end.js"
+    "start": ".claude/hooks/session-start.js",
+    "end": ".claude/hooks/session-end.js"
+  },
+  "hooks": {
+    "userPromptSubmit": ".claude/hooks/user-prompt-submit.js"
   },
   "excludePatterns": [
     "**/node_modules/**",
