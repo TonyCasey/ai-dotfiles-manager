@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "rootDir": ".",
+    "noEmit": true,
+    // Slightly relaxed rules for tests
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "packages/**/*.ts",
+    "services/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist",
+    "**/node_modules",
+    "**/dist",
+    "**/*.d.ts"
+  ]
+}
+
