@@ -186,11 +186,11 @@ async function main(isUpdate = false, autoYes = false) {
   }
 
   console.log('');
-  console.log(chalk.gray('Setting up with symlinked templates (customize via .local directories)...\n'));
+  console.log(chalk.gray('Setting up with copied templates (customize via .local directories)...\n'));
 
-  // Set up each selected tool with symlinks
+  // Set up each selected tool with copied templates
   for (const tool of tools) {
-    await setupTool(tool, 'symlink', language);
+    await setupTool(tool, language);
   }
 
   // Set up .dev folder for developer workspace
@@ -198,6 +198,9 @@ async function main(isUpdate = false, autoYes = false) {
 
   // Set up centralized rules directory
   await setupCentralizedRules(language, isUpdate);
+
+  // Set up Codex CLI session guide (AGENTS.md block)
+  await setupCodexGuide(language, isUpdate);
 
   // Set up TypeScript configuration files if TypeScript project
   if (language === 'typescript') {
@@ -241,17 +244,17 @@ function detectLanguage(projectRoot) {
   return null;
 }
 
-async function setupTool(tool, method, language) {
+async function setupTool(tool, language) {
   console.log(chalk.blue(`\n📦 Setting up ${tool}...`));
 
   if (tool === 'claude') {
-    await setupClaude(method, language);
+    await setupClaude(language);
   } else if (tool === 'cursor') {
-    await setupCursor(method, language);
+    await setupCursor(language);
   } else if (tool === 'kilo') {
-    await setupKilo(method, language);
+    await setupKilo(language);
   } else if (tool === 'roo') {
-    await setupRoo(method, language);
+    await setupRoo(language);
   }
 }
 
@@ -462,7 +465,7 @@ async function handleExistingCursorConfig(cursorRulesPath) {
   }
 }
 
-async function setupClaude(method, language) {
+async function setupClaude(language) {
   const claudeDir = path.join(PROJECT_ROOT, '.claude');
   const templateDir = path.join(TEMPLATES_DIR, 'claude');
 
@@ -513,7 +516,7 @@ async function setupClaude(method, language) {
   const templateWorkflowsDir = path.join(templateDir, 'workflows');
 
   if (fs.existsSync(templateWorkflowsDir) && fs.readdirSync(templateWorkflowsDir).length > 0) {
-    await setupSymlink(templateWorkflowsDir, workflowsDir, 'workflows directory');
+  await copyPath(templateWorkflowsDir, workflowsDir, 'workflows directory');
   }
 
   // Set up hooks directory
@@ -526,7 +529,7 @@ async function setupClaude(method, language) {
       fs.mkdirSync(hooksDir, { recursive: true });
     }
 
-    // Copy hook files (not symlink - projects may customize hooks)
+    // Copy hook files (projects may customize hooks)
     const hookFiles = fs.readdirSync(templateHooksDir);
     for (const file of hookFiles) {
       const source = path.join(templateHooksDir, file);
@@ -551,7 +554,7 @@ async function setupClaude(method, language) {
     console.log(chalk.blue('  ℹ Hooks will run automatically on session start/end'));
   }
 
-  // Copy settings.json if it exists in template (do not symlink - each project needs its own)
+  // Copy settings.json if it exists in template (project-specific file)
   const settingsTemplate = path.join(templateDir, 'settings.json');
   const settingsTarget = path.join(claudeDir, 'settings.json');
 
@@ -581,7 +584,7 @@ async function setupClaude(method, language) {
   console.log(chalk.green('  ✓ Claude Code configuration set up'));
 }
 
-async function setupCursor(method, language) {
+async function setupCursor(language) {
   const cursorRulesPath = path.join(PROJECT_ROOT, '.cursorrules');
   const templatePath = path.join(TEMPLATES_DIR, 'cursor', '.cursorrules');
 
@@ -590,23 +593,17 @@ async function setupCursor(method, language) {
     return;
   }
 
-  // Check if .cursorrules already exists and is NOT a symlink
+  // Check if .cursorrules already exists
   if (fs.existsSync(cursorRulesPath)) {
-    const stats = fs.lstatSync(cursorRulesPath);
-    if (!stats.isSymbolicLink()) {
-      // Handle existing file
-      const migrated = await handleExistingCursorConfig(cursorRulesPath);
-      if (migrated === 'skip') {
-        console.log(chalk.gray('  Skipped Cursor setup'));
-        return;
-      }
-    } else {
-      // It's already a symlink, just remove and recreate
-      fs.unlinkSync(cursorRulesPath);
+    // Handle existing file
+    const migrated = await handleExistingCursorConfig(cursorRulesPath);
+    if (migrated === 'skip') {
+      console.log(chalk.gray('  Skipped Cursor setup'));
+      return;
     }
   }
 
-  await setupSymlink(templatePath, cursorRulesPath, '.cursorrules');
+  await copyPath(templatePath, cursorRulesPath, '.cursorrules');
 
   // Create .cursorrules.local for custom overrides
   const cursorLocalPath = path.join(PROJECT_ROOT, '.cursorrules.local');
@@ -618,7 +615,7 @@ async function setupCursor(method, language) {
   console.log(chalk.green('  ✓ Cursor configuration set up'));
 }
 
-async function setupKilo(method, language) {
+async function setupKilo(language) {
   const kiloDir = path.join(PROJECT_ROOT, '.kilocode');
 
   // Check if .kilocode directory already exists with content
@@ -645,17 +642,17 @@ async function setupKilo(method, language) {
     fs.mkdirSync(rulesDir, { recursive: true });
   }
 
-  // Symlink shared rules
+  // Copy shared rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
+  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
 
-  // Symlink language-specific rules
+  // Copy language-specific rules
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
 
   if (fs.existsSync(languageRulesSource)) {
-    await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
+    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -673,7 +670,7 @@ async function setupKilo(method, language) {
   console.log(chalk.green('  ✓ Kilo Code configuration set up'));
 }
 
-async function setupRoo(method, language) {
+async function setupRoo(language) {
   const rooDir = path.join(PROJECT_ROOT, '.roo');
 
   // Check if .roo directory already exists with content
@@ -700,17 +697,17 @@ async function setupRoo(method, language) {
     fs.mkdirSync(rulesDir, { recursive: true });
   }
 
-  // Symlink shared rules
+  // Copy shared rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
+  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
 
-  // Symlink language-specific rules
+  // Copy language-specific rules
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
 
   if (fs.existsSync(languageRulesSource)) {
-    await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
+    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -746,85 +743,46 @@ function copyDirectory(src, dest) {
   }
 }
 
-async function setupSymlink(source, target, name, fallbackToCopy = true) {
-  // Remove existing symlink or file if it exists
+async function copyPath(source, target, name) {
+  // Always copy (no symlinks)
+  const isDirectory = fs.statSync(source).isDirectory();
+
   if (fs.existsSync(target)) {
     const stats = fs.lstatSync(target);
-    if (stats.isSymbolicLink()) {
-      fs.unlinkSync(target);
-    } else {
-      const { replace } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'replace',
-          message: `  ${name} exists. Replace with symlink?`,
-          default: true,
-        },
-      ]);
+    const { replace } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'replace',
+        message: `  ${name} exists. Replace with copied templates?`,
+        default: true,
+      },
+    ]);
 
-      if (!replace) {
-        console.log(chalk.gray(`  Skipped ${name}`));
-        return { success: false, usedCopy: false };
-      }
-
-      if (stats.isDirectory()) {
-        fs.rmSync(target, { recursive: true });
-      } else {
-        fs.unlinkSync(target);
-      }
+    if (!replace) {
+      console.log(chalk.gray(`  Skipped ${name}`));
+      return { success: false, usedCopy: true };
     }
-  }
 
-  // Determine symlink type based on OS and source type
-  const isDirectory = fs.statSync(source).isDirectory();
-  const isWindows = process.platform === 'win32';
-
-  // On Windows, use 'junction' for directories (doesn't require admin rights)
-  // Use 'file' for files (requires admin or Developer Mode)
-  let symlinkType;
-  if (isWindows) {
-    symlinkType = isDirectory ? 'junction' : 'file';
-  } else {
-    symlinkType = isDirectory ? 'dir' : 'file';
+    if (stats.isDirectory()) {
+      fs.rmSync(target, { recursive: true });
+    } else {
+      fs.unlinkSync(target);
+    }
   }
 
   try {
-    fs.symlinkSync(source, target, symlinkType);
-
-    // Set symlink target as read-only (on Unix-like systems)
-    // This prevents accidental modifications to shared templates
-    if (!isWindows && isDirectory) {
-      try {
-        // Make the symlink target read-only
-        fs.chmodSync(target, 0o444); // r--r--r--
-      } catch (chmodError) {
-        // Silently fail if chmod doesn't work (some filesystems don't support it)
-      }
-    }
-
-    console.log(chalk.green(`  ✓ Created ${isWindows && isDirectory ? 'junction' : 'symlink'} for ${name} (read-only)`));
-    return { success: true, usedCopy: false };
-  } catch (error) {
-    if (error.code === 'EPERM' && isWindows && fallbackToCopy) {
-      console.log(chalk.yellow(`  ⚠ Permission denied creating symlink for ${name}`));
-      console.log(chalk.gray('  ℹ Falling back to copying files (Windows compatibility mode)'));
-
-      try {
-        if (isDirectory) {
-          copyDirectory(source, target);
-        } else {
-          fs.copyFileSync(source, target);
-        }
-        console.log(chalk.green(`  ✓ Copied ${name} (use sync script to update)`));
-        return { success: true, usedCopy: true };
-      } catch (copyError) {
-        console.log(chalk.red(`  ✗ Failed to copy ${name}: ${copyError.message}`));
-        throw copyError;
-      }
+    if (isDirectory) {
+      copyDirectory(source, target);
     } else {
-      console.log(chalk.red(`  ✗ Failed to create symlink for ${name}: ${error.message}`));
-      throw error;
+      const parent = path.dirname(target);
+      if (!fs.existsSync(parent)) fs.mkdirSync(parent, { recursive: true });
+      fs.copyFileSync(source, target);
     }
+    console.log(chalk.green(`  ✓ Copied ${name}`));
+    return { success: true, usedCopy: true };
+  } catch (error) {
+    console.log(chalk.red(`  ✗ Failed to copy ${name}: ${error.message}`));
+    throw error;
   }
 }
 
@@ -840,10 +798,7 @@ This directory is for **your project-specific custom rules** that override or ex
 
 ## Why use .local?
 
-The symlinked rule directories (\`shared/\`, \`typescript/\`, etc.) are **read-only** and point to the global package installation. This ensures:
-- ✅ You always get the latest team standards when updating the package
-- ✅ Rules remain consistent across all projects
-- ✅ No accidental modifications to shared standards
+The base rule directories (\`shared/\`, \`${toolName === 'Claude Code' ? 'typescript' : 'typescript'}\`, etc.) are **copied** from this package during setup/update. Treat them as managed sources; do not edit them directly because updates may overwrite changes. Use .local for customizations that persist.
 
 ## How to customize
 
@@ -877,14 +832,14 @@ See base rules in \`../shared/clean-architecture.md\`
 
 ## Updating base rules
 
-When you run \`ai-dotfiles-manager update\`, the symlinked directories are automatically updated with the latest templates, but your .local files remain untouched.
+When you run \`ai-dotfiles-manager update\`, the copied base rule directories are refreshed with the latest templates, but your .local files remain untouched.
 
 ## Git
 
 **Commit .local files** to share project-specific rules with your team:
 \`\`\`gitignore
 # In your .gitignore:
-# Ignore symlinked base rules
+# Ignore base rules copied from package
 .claude/rules/shared
 .claude/rules/typescript
 
@@ -947,18 +902,18 @@ async function setupCentralizedRules(language, isUpdate) {
     console.log(chalk.green('  ✓ Created .dev/rules/ directory'));
   }
 
-  // Create shared rules symlink
+  // Copy shared rules into provider rules directory
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  const sharedResult = await setupSymlink(sharedRulesSource, sharedRulesDest, 'shared rules');
+  const sharedResult = await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
 
-  // Create language-specific rules symlink
+  // Copy language-specific rules into provider rules directory
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
   let languageResult = { usedCopy: false };
 
   if (fs.existsSync(languageRulesSource)) {
-    languageResult = await setupSymlink(languageRulesSource, languageRulesDest, `${language} rules`);
+    languageResult = await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -1071,14 +1026,14 @@ See base rules in \`../shared/clean-architecture.md\`
 
 ## Updating base rules
 
-When you run \`ai-dotfiles-manager update\`, the symlinked directories are automatically updated with the latest templates, but your .local files remain untouched.
+When you run \`ai-dotfiles-manager update\`, the copied base rule directories are refreshed with the latest templates, but your .local files remain untouched.
 
 ## Git
 
 **Commit .local files** to share project-specific rules with your team:
 \`\`\`gitignore
 # In your .gitignore:
-# Ignore symlinked base rules
+# Ignore base rules copied from the package
 .dev/rules/shared/
 .dev/rules/typescript/
 
@@ -1099,11 +1054,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 \`\`\`
 .dev/rules/
-├── shared/              # Language-agnostic rules (symlinked)
+├── shared/              # Language-agnostic rules (managed copies)
 │   ├── clean-architecture.md
 │   ├── repository-pattern.md
 │   └── testing-principles.md
-├── typescript/          # Language-specific rules (symlinked)
+├── typescript/          # Language-specific rules (managed copies)
 │   ├── coding-standards.md
 │   └── testing.md
 └── .local/             # Project-specific overrides
@@ -1113,11 +1068,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 ## How It Works
 
-### Base Rules (Read-Only Symlinks)
+### Base Rules (Managed Copies)
 - **Shared Rules**: Universal principles applicable to all projects
 - **Language Rules**: Specific conventions for your programming language
-- **Symlinked from**: Global package templates
-- **Automatically updated**: Run \`ai-dotfiles-manager update\`
+- **Source**: Copied from global package templates
+- **Updated via**: Run \`ai-dotfiles-manager update\`
 
 ### Local Overrides (Writable)
 - **Project-specific**: Custom rules for this project only
@@ -1345,8 +1300,8 @@ function printNextSteps(tools, language, isUpdate = false) {
   if (tools.includes('claude')) {
     console.log(chalk.white('Claude Code:'));
     console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
-    console.log(chalk.gray('    - shared/ (symlinked, read-only)'));
-    console.log(chalk.gray(`    - ${language}/ (symlinked, read-only)`));
+    console.log(chalk.gray('    - shared/ (managed copies)'));
+    console.log(chalk.gray(`    - ${language}/ (managed copies)`));
     console.log(chalk.gray('    - .local/ (your custom rules)'));
     console.log(chalk.gray('  • Commands are available as slash commands:'));
     console.log(chalk.gray('    - /create-repo - Create a new repository'));
@@ -1387,7 +1342,51 @@ function printNextSteps(tools, language, isUpdate = false) {
   console.log(chalk.blue('💡 Run "ai-dotfiles-manager review" to check for architecture violations\n'));
 }
 
+async function setupCodexGuide(language, isUpdate) {
+  const agentsPath = path.join(PROJECT_ROOT, 'AGENTS.md');
+  const { generateCodexGuide } = require('../lib/codex-session-guide');
+  const guideBlock = generateCodexGuide(language);
+
+  const startMarker = '<!-- ai-dotfiles-manager:codex-guide:start -->';
+  const endMarker = '<!-- ai-dotfiles-manager:codex-guide:end -->';
+
+  try {
+    if (fs.existsSync(agentsPath)) {
+      const current = fs.readFileSync(agentsPath, 'utf-8');
+      const startIdx = current.indexOf(startMarker);
+      const endIdx = current.indexOf(endMarker);
+
+      let nextContent;
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        // Replace existing managed block
+        nextContent = current.substring(0, startIdx) + guideBlock + current.substring(endIdx + endMarker.length);
+      } else {
+        // Append new managed block at the end with spacing
+        nextContent = current.trimEnd() + '\n\n' + guideBlock + '\n';
+      }
+
+      fs.writeFileSync(agentsPath, nextContent);
+      console.log(chalk.green('  ✓ Updated Codex session guide in AGENTS.md'));
+    } else {
+      // Create a new AGENTS.md focused on Codex guide
+      const content = `${guideBlock}\n`;
+      fs.writeFileSync(agentsPath, content);
+      console.log(chalk.green('  ✓ Created AGENTS.md with Codex session guide'));
+    }
+  } catch (error) {
+    console.log(chalk.yellow(`  ⚠ Skipped Codex guide update: ${error.message}`));
+  }
+}
+
 async function handleCommitTodoCommand() {
+  // Auto-refresh Codex guide block on any command
+  try {
+    const language = detectLanguage(PROJECT_ROOT) || 'typescript';
+    await setupCodexGuide(language, true);
+  } catch (_) {
+    // Non-fatal if Codex guide update fails
+  }
+
   const { enforceCommitPolicy, checkUncommittedWork } = require('../templates/dev/hooks/todo-commit.js');
   
   console.log(chalk.blue.bold('\n🔄 Todo Commit Enforcement\n'));
@@ -1406,6 +1405,14 @@ async function handleCommitTodoCommand() {
 }
 
 async function handleReviewCommand(reviewArgs) {
+  // Auto-refresh Codex guide block on any command
+  try {
+    const language = detectLanguage(PROJECT_ROOT) || 'typescript';
+    await setupCodexGuide(language, true);
+  } catch (_) {
+    // Non-fatal if Codex guide update fails
+  }
+
   const CodeReviewer = require('../scripts/review.js');
 
   // Parse review options

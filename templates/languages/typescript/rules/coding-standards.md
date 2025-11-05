@@ -367,10 +367,10 @@ export interface IPaginationResponse<T> {
 
 ### Index Files for Clean Imports
 
-Use `index.ts` files to export from directories:
+Use `AgentEnums.ts` files to export from directories:
 
 ```typescript
-// File: src/domain/interfaces/index.ts
+// File: src/domain/interfaces/AgentEnums.ts
 export { IProductRepository } from './IProductRepository';
 export { IOrderRepository } from './IOrderRepository';
 export { IUserRepository } from './IUserRepository';

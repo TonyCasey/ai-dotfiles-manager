@@ -6,11 +6,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 ```
 .dev/rules/
-├── shared/              # Language-agnostic rules (symlinked)
+├── shared/              # Language-agnostic rules (managed copies)
 │   ├── clean-architecture.md
 │   ├── repository-pattern.md
 │   └── testing-principles.md
-├── typescript/          # Language-specific rules (symlinked)
+├── typescript/          # Language-specific rules (managed copies)
 │   ├── coding-standards.md
 │   └── testing.md
 └── .local/             # Project-specific overrides
@@ -20,11 +20,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 ## How It Works
 
-### Base Rules (Read-Only Symlinks)
+### Base Rules (Managed Copies)
 - **Shared Rules**: Universal principles applicable to all projects
 - **Language Rules**: Specific conventions for your programming language
-- **Symlinked from**: Global package templates
-- **Automatically updated**: Run `ai-dotfiles-manager update`
+- **Source**: Copied from global package templates
+- **Updated via**: Run `ai-dotfiles-manager update`
 
 ### Local Overrides (Writable)
 - **Project-specific**: Custom rules for this project only

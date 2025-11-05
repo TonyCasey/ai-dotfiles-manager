@@ -1,15 +1,17 @@
 {
   "name": "ai-dotfiles-manager",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Centralized AI assistant configuration manager. Sync rules, slash commands, and workflows across Claude Code, Cursor, Kilo Code, and Roo Code. One setup, consistent AI assistance in all projects with centralized .dev/rules/ and automatic session hooks.",
   "bin": {
     "ai-dotfiles-manager": "./bin/setup.js"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
+    "prepare": "npm run build",
     "postinstall": "node -e \"console.log('\\n✅ ai-dotfiles-manager installed! Run \\\"ai-dotfiles-manager setup\\\" in your project.\\n')\"",
     "preversion": "npm test",
     "prepublishOnly": "npm test",
@@ -52,6 +54,7 @@
   "license": "MIT",
   "preferGlobal": true,
   "files": [
+    "dist/",
     "templates/",
     "bin/",
     "scripts/",

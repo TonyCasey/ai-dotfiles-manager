@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "noEmitOnError": true,
+    "sourceMap": false,
+    "module": "commonjs",
+    "target": "ES2019"
+  },
+  "include": [
+    "bin/**/*.js",
+    "lib/**/*.js",
+    "scripts/**/*.js"
+  ],
+  "exclude": [
+    "__tests__/**",
+    "coverage/**",
+    "templates/**",
+    "node_modules/**"
+  ]
+}

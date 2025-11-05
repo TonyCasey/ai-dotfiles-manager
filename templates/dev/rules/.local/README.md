@@ -87,7 +87,7 @@ This means your `.local/` files always take precedence over base rules.
 
 ```gitignore
 # In your .gitignore:
-# Ignore symlinked base rules
+# Ignore base rules copied from the package
 .dev/rules/shared/
 .dev/rules/typescript/
 

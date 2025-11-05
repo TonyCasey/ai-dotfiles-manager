@@ -17,8 +17,8 @@ Sick of .files folder overload and having to copy and paste tour rules, workflow
     ├── .roo/                # Roo Code config (points to .dev/rules/)
     └── .dev/                # Centralized rules and workspace
         ├── rules/            # Centralized rule repository
-        │   ├── shared/      # Language-agnostic rules (symlinked)
-        │   ├── typescript/   # Language-specific rules (symlinked)
+        │   ├── shared/      # Language-agnostic rules (managed copies)
+        │   ├── typescript/   # Language-specific rules (managed copies)
         │   └── .local/      # Project-specific overrides
         ├── architecture.md   # Auto-generated project overview
         └── todo.md           # Developer task list
@@ -27,6 +27,8 @@ Sick of .files folder overload and having to copy and paste tour rules, workflow
 This package provides **centralized configurations** for AI coding CLI assistants (Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.
 
 **Key Innovation**: All rules are centralized in `.dev/rules/` instead of duplicated across provider folders. Claude Code hooks (in `.claude/hooks/`) automatically load rules and commit completed tasks.
+
+> Deprecation notice: Provider-specific rule folders and shortcut copies are deprecated. All provider configs now reference the centralized `.dev/rules/` (shared) directory. Base rules within `.dev/rules/` are managed copies sourced from this package.
 
 A dotfiles manager for your AI tools!
 
@@ -198,11 +200,11 @@ All rules are **centralized** in `.dev/rules/` and referenced by all AI tools:
 ```bash
 # After running "ai-dotfiles-manager setup":
 ~/projects/my-project/.dev/rules/
-├── shared/              # Language-agnostic rules (symlinked)
+├── shared/              # Language-agnostic rules (managed copies)
 │   ├── clean-architecture.md
 │   ├── repository-pattern.md
 │   └── testing-principles.md
-├── typescript/          # Language-specific rules (symlinked)
+├── typescript/          # Language-specific rules (managed copies)
 │   ├── coding-standards.md
 │   └── testing.md
 └── .local/             # Project-specific overrides
@@ -218,7 +220,7 @@ All rules are **centralized** in `.dev/rules/` and referenced by all AI tools:
 
 ### Provider Configurations (Minimal)
 
-Each AI tool has minimal configuration pointing to `.dev/rules/`:
+Each AI tool has minimal configuration pointing to `.dev/rules/` (no per-provider rule folders):
 
 ```bash
 .claude/settings.json     # Points to ../.dev/rules/
@@ -229,8 +231,8 @@ Each AI tool has minimal configuration pointing to `.dev/rules/`:
 
 **Benefits:**
 - ✅ Provider folders still exist for tool-specific features
-- ✅ All rules loaded from centralized location
-- ✅ No more rule duplication
+- ✅ All rules load from centralized location (shared)
+- ✅ No more duplicated or shortcut rule folders in providers
 - ✅ Easy to maintain and update
 
 ### Claude Code Hooks (Automatic)
@@ -255,11 +257,9 @@ Claude Code hooks automatically manage your workflow:
 
 ### Windows Support
 
-- **Directories**: Use junctions (no admin required) ✓
-- **Files**: Require admin privileges or Developer Mode
-- **Automatic fallback**: Files are copied when symlinks fail
-- **Sync script**: Auto-generated for keeping rules updated
-- See [Troubleshooting](#troubleshooting) for details
+- Uses managed copies for all base rules (no symlinks required)
+- No special permissions needed
+
 
 ## Developer Workspace (.dev/)
 
@@ -458,7 +458,7 @@ ai-dotfiles-manager update --yes
 ai-dotfiles-manager update -y
 ```
 
-Refreshes symlinked base rules while preserving your `.local/` customizations.
+Refreshes base rules (managed copies) while preserving your `.local/` customizations.
 By default, replaces existing files without creating backups for streamlined updates.
 
 ### `review` - Code Review
@@ -570,7 +570,7 @@ See `.dev/rules/.local/README.md` (auto-generated) for detailed instructions.
 ### Recommended .gitignore
 
 ```gitignore
-# Ignore symlinked base rules (read-only)
+# Ignore base rules copied from the package
 .dev/rules/shared/
 .dev/rules/typescript/
 .dev/rules/python/
@@ -601,7 +601,7 @@ See `.dev/rules/.local/README.md` (auto-generated) for detailed instructions.
 
 ### Why?
 
-- Base rules are symlinks → don't commit (teammates will run `ai-dotfiles-manager setup`)
+- Base rules are managed copies → don't commit (teammates will run `ai-dotfiles-manager setup`)
 - Local rules are yours → commit them (project-specific customizations)
 - Everyone runs setup once, gets same base rules, sees your custom rules
 
@@ -701,38 +701,18 @@ export PATH="$(npm config get prefix)/bin:$PATH"
 source ~/.zshrc
 ```
 
-### Symlinks Not Working
+### Updating Rules
 
-**Windows users:**
-- Directory symlinks use **junctions** (no admin required) ✓
-- File symlinks require administrator privileges or Developer Mode
-- **Automatic fallback**: If symlinks fail, files are copied automatically
-- **Sync script**: When copying is used, a `sync-rules.js` script is added to `.claude/scripts/`
-- To enable Developer Mode: Settings → Update & Security → For Developers → Developer Mode
+To refresh base rules (managed copies) after upgrading the tool:
 
-**Windows fallback mode:**
 ```bash
-# When symlinks fail, update copied rules with:
-node .claude/scripts/sync-rules.js
-
-# Or add to your package.json:
-"scripts": {
-  "sync-claude-rules": "node .claude/scripts/sync-rules.js"
-}
-```
-
-**Mac/Linux users:**
-```bash
-# Check if package is installed globally
-npm list -g ai-dotfiles-manager
-
-# Check file permissions
-ls -la .claude/rules/
+npm update -g ai-dotfiles-manager
+ai-dotfiles-manager update
 ```
 
 ### Can't Edit Base Rules
 
-This is intentional! Base rules are read-only symlinks. To customize:
+This is intentional! Base rules are managed copies. To customize:
 1. Create files in `.dev/rules/.local/`
 2. See `.dev/rules/.local/README.md` for instructions
 3. Your `.local/` files take precedence over base rules
@@ -981,9 +961,9 @@ MIT License - See LICENSE file for details.
 ### 1.1.0
 - Added "Select All" option for tool selection
 - Added `update` command for updating existing configurations
-- Removed copy option (symlink-only for consistency)
+- Switched to managed copies for consistency
 - Added `.local/` directories for project-specific customizations
-- Set symlinked files as read-only to prevent accidental modifications
+- Base rules treated as managed sources (edit via .local overrides)
 - Auto-generate README.md in `.local/` directories with instructions
 - Renamed package from `ai-dev-standards` to `ai-dotfiles-manager`
 - Enhanced Windows support with junctions (no admin required for directories)
@@ -992,7 +972,7 @@ MIT License - See LICENSE file for details.
 - Added `review` command for automated architecture violation detection
 - Enhanced setup wizard to support 4 AI tools
 - Added TypeScript AST-based code analysis
-- Updated documentation for symlink-only workflow
+- Updated documentation for managed-copies workflow
 
 ### 1.0.0
 - Initial release
