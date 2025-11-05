@@ -23,7 +23,6 @@ function createMockFileSystem(structure) {
           content: value,
           isDirectory: () => false,
           isFile: () => true,
-          isSymbolicLink: () => false,
         });
       } else if (typeof value === 'object' && value !== null) {
         // Directory
@@ -32,7 +31,6 @@ function createMockFileSystem(structure) {
           children: Object.keys(value),
           isDirectory: () => true,
           isFile: () => false,
-          isSymbolicLink: () => false,
         });
         traverse(value, fullPath);
       }
@@ -89,7 +87,6 @@ function createFsMock(fileSystem, basePath = '') {
         content,
         isDirectory: () => false,
         isFile: () => true,
-        isSymbolicLink: () => false,
       });
     }),
 
@@ -100,7 +97,6 @@ function createFsMock(fileSystem, basePath = '') {
         children: [],
         isDirectory: () => true,
         isFile: () => false,
-        isSymbolicLink: () => false,
       });
     }),
 
@@ -140,17 +136,7 @@ function createFsMock(fileSystem, basePath = '') {
       return entry;
     }),
 
-    symlinkSync: jest.fn((target, path, type) => {
-      const normalizedPath = normalizePath(path);
-      fileSystem.set(normalizedPath, {
-        type: 'symlink',
-        target,
-        linkType: type,
-        isDirectory: () => false,
-        isFile: () => false,
-        isSymbolicLink: () => true,
-      });
-    }),
+    // symlinkSync intentionally omitted (project uses managed copies)
 
     unlinkSync: jest.fn((path) => {
       const normalizedPath = normalizePath(path);
