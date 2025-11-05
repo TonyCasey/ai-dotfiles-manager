@@ -175,26 +175,26 @@ async function setupCentralizedRules() {
     log('Created .dev/rules/ directory', 'success');
   }
   
-  // Create shared rules symlink
+  // Copy shared rules into centralized rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
   if (fs.existsSync(sharedRulesDest)) {
-    fs.unlinkSync(sharedRulesDest);
+    fs.rmSync(sharedRulesDest, { recursive: true, force: true });
   }
-  fs.symlinkSync(sharedRulesSource, sharedRulesDest, 'dir');
-  log('Created shared rules symlink', 'success');
+  copyDirectorySync(sharedRulesSource, sharedRulesDest);
+  log('Copied shared rules', 'success');
   
-  // Create language-specific rules symlink (detect language)
+  // Copy language-specific rules (detect language)
   const language = detectLanguage();
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
   
   if (fs.existsSync(languageRulesSource)) {
     if (fs.existsSync(languageRulesDest)) {
-      fs.unlinkSync(languageRulesDest);
+      fs.rmSync(languageRulesDest, { recursive: true, force: true });
     }
-    fs.symlinkSync(languageRulesSource, languageRulesDest, 'dir');
-    log(`Created ${language} rules symlink`, 'success');
+    copyDirectorySync(languageRulesSource, languageRulesDest);
+    log(`Copied ${language} rules`, 'success');
   } else {
     log(`No ${language} rules available, skipping`, 'warn');
   }
@@ -241,11 +241,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 \`\`\`
 .dev/rules/
-├── shared/              # Language-agnostic rules (symlinked)
+├── shared/              # Language-agnostic rules (managed copies)
 │   ├── clean-architecture.md
 │   ├── repository-pattern.md
 │   └── testing-principles.md
-├── ${language}/          # Language-specific rules (symlinked)
+├── ${language}/          # Language-specific rules (managed copies)
 │   ├── coding-standards.md
 │   └── testing.md
 └── .local/             # Project-specific overrides
@@ -255,11 +255,11 @@ This directory contains **centralized rules** for all AI coding assistants, elim
 
 ## How It Works
 
-### Base Rules (Read-Only Symlinks)
+### Base Rules (Managed Copies)
 - **Shared Rules**: Universal principles applicable to all projects
 - **Language Rules**: Specific conventions for your programming language
-- **Symlinked from**: Global package templates
-- **Automatically updated**: Run \`ai-dotfiles-manager update\`
+- **Source**: Copied from global package templates
+- **Updated via**: Run \`ai-dotfiles-manager update\`
 
 ### Local Overrides (Writable)
 - **Project-specific**: Custom rules for this project only
