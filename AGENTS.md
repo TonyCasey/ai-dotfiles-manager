@@ -41,6 +41,7 @@
 ## Agent-Specific Notes
 - If adding templates, keep `.dev/rules/` as the single source of truth; providers reference it.
 - New providers/languages should mirror existing template structure and testing approach.
+- Consult the JetBrains lint checklist in `.dev/lint/jetbrains-lint.md` to keep generated JS/TS code aligned with Inspectopedia.
 
 <!-- ai-dotfiles-manager:codex-guide:start -->
 # Codex Session Guide
@@ -52,6 +53,7 @@ On session start, load and keep the following files in working memory:
 - `.dev/rules/shared/*.md`
 - `.dev/rules/typescript/*.md` (if present)
 - `.dev/rules/.local/*.md` (project-specific overrides)
+- `.dev/lint/*.md` (lint checklists & IDE parity notes)
 
 - Manifest: `.dev/codex-manifest.json` (authoritative load order)
 - Index: `.dev/context-index.md` (links to key context)
@@ -71,6 +73,7 @@ Key expectations for this repository:
 - Prefer pure functions; isolate IO to scripts/ and bin/.
 - Maintain test coverage ≥ 70% (see `jest.config.js`).
 - Offer fixes that update docs or scripts when behavior changes.
+- Prompt templates live in `templates/codex/prompts/` for quick session kickoffs.
 
 Assistant behavior:
 - Propose changes that align with loaded rules.
@@ -83,6 +86,7 @@ Example rules (not exhaustive):
 - .dev/rules/typescript/coding-standards.md
 - .dev/rules/typescript/testing.md
 - .dev/rules/.local/README.md
+- .dev/lint/jetbrains-lint.md
 
 Note: This section is managed by ai-dotfiles-manager. You may add content above or below; changes inside markers may be overwritten on update.
 <!-- ai-dotfiles-manager:codex-guide:end -->

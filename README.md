@@ -32,6 +32,10 @@ This package provides **centralized configurations** for AI coding CLI assistant
 
 A dotfiles manager for your AI tools!
 
+## Start Here
+
+- [Project Context Index](.dev/context-index.md)
+
 ## Features
 
 - **Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
@@ -467,12 +471,6 @@ ai-dotfiles-manager update -y
 
 Refreshes base rules (managed copies) while preserving your `.local/` customizations.
 By default, replaces existing files without creating backups for streamlined updates.
-
-Combine with `--no-codex-guide` when you only want rule updates without touching Codex guide files:
-
-```bash
-ai-dotfiles-manager update --yes --no-codex-guide
-```
 
 ### `review` - Code Review
 
