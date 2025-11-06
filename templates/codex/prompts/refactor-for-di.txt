@@ -1,0 +1,1 @@
+Refactor {Module} to accept dependencies through parameters, remove direct require() side effects, and update tests to use injectable fakes.

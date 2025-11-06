@@ -1,0 +1,1 @@
+Implement the {Feature} repository with dependency-injected storage and add Jest tests covering create/read/update/delete paths.
