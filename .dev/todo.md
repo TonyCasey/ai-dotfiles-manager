@@ -58,6 +58,12 @@
 - [ ] CI: Validate `.dev/codex-manifest.json` exists and paths resolve.
 - [ ] Add `npm run codex:doctor` to print manifest, guide status, and missing context files.
 
+## Delegated to Claude Cloud (Nov 5)
+
+- [ ] Implement `--no-codex-guide` flag and update help/README.
+- [ ] README “Start Here” and CONTRIBUTING with Codex Working Agreement.
+- [ ] Add `templates/codex/prompts/` and reference in AGENTS.
+
 ## Future Enhancements
 
 - [ ] Optional MCP server to expose `.dev/architecture.md` and `.dev/rules/**` as resources for richer browsing.

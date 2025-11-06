@@ -16,23 +16,27 @@ const getPackageRoot = () => {
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const command = args[0];
+const firstArg = args[0];
 const flags = args.filter(arg => arg.startsWith('-'));
+const positionals = args.filter(arg => !arg.startsWith('-'));
+const command = positionals[0];
+const commandIndex = typeof command === 'string' ? args.indexOf(command) : -1;
 const AUTO_YES = flags.includes('--yes') || flags.includes('-y');
 
 // Handle commands
-if (command === '--version' || command === '-v') {
+if (firstArg === '--version' || firstArg === '-v') {
   console.log(`v${PACKAGE_JSON.version}`);
   process.exit(0);
 }
 
-if (command === '--help' || command === '-h') {
+if (firstArg === '--help' || firstArg === '-h') {
   printHelp();
   process.exit(0);
 }
 
 if (command === 'review') {
-  handleReviewCommand(args.slice(1)).catch((error) => {
+  const reviewArgs = commandIndex >= 0 ? args.slice(commandIndex + 1) : [];
+  handleReviewCommand(reviewArgs).catch((error) => {
     console.error(chalk.red('\n❌ Error during review:'), error);
     process.exit(1);
   });
@@ -190,14 +194,14 @@ async function main(isUpdate = false, autoYes = false) {
 
   // Set up each selected tool with copied templates
   for (const tool of tools) {
-    await setupTool(tool, language);
+    await setupTool(tool, language, autoYes);
   }
 
   // Set up .dev folder for developer workspace
   await setupDevFolder(language, isUpdate);
 
   // Set up centralized rules directory
-  await setupCentralizedRules(language, isUpdate);
+  await setupCentralizedRules(language, isUpdate, autoYes);
 
   // Generate Codex manifest/index and session guide
   const discovered = discoverRuleFiles(language);
@@ -246,53 +250,59 @@ function detectLanguage(projectRoot) {
   return null;
 }
 
-async function setupTool(tool, language) {
+async function setupTool(tool, language, autoYes) {
   console.log(chalk.blue(`\n📦 Setting up ${tool}...`));
 
   if (tool === 'claude') {
-    await setupClaude(language);
+    await setupClaude(language, autoYes);
   } else if (tool === 'cursor') {
-    await setupCursor(language);
+    await setupCursor(language, autoYes);
   } else if (tool === 'kilo') {
-    await setupKilo(language);
+    await setupKilo(language, autoYes);
   } else if (tool === 'roo') {
-    await setupRoo(language);
+    await setupRoo(language, autoYes);
   }
 }
 
-async function handleExistingConfig(configDir, toolName) {
+async function handleExistingConfig(configDir, toolName, autoYes = false) {
   console.log(chalk.yellow(`\n  ⚠ Existing ${toolName} configuration detected`));
 
-  const { action } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'action',
-      message: `  How would you like to handle existing ${toolName} files?`,
-      choices: [
-        {
-          name: 'Replace with new setup',
-          value: 'replace',
-          short: 'Replace'
-        },
-        {
-          name: 'Migrate to .local/ (your files supersede shared rules)',
-          value: 'migrate-supersede',
-          short: 'Migrate (supersede)'
-        },
-        {
-          name: 'Migrate to .local/ (preserved alongside shared rules)',
-          value: 'migrate-preserve',
-          short: 'Migrate (preserve)'
-        },
-        {
-          name: 'Skip - keep existing configuration as-is',
-          value: 'skip',
-          short: 'Skip'
-        }
-      ],
-      default: 'replace'
-    }
-  ]);
+  let action;
+  if (autoYes) {
+    // Safe default for CI: preserve user files alongside shared rules
+    action = 'migrate-preserve';
+  } else {
+    ({ action } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'action',
+        message: `  How would you like to handle existing ${toolName} files?`,
+        choices: [
+          {
+            name: 'Replace with new setup',
+            value: 'replace',
+            short: 'Replace'
+          },
+          {
+            name: 'Migrate to .local/ (your files supersede shared rules)',
+            value: 'migrate-supersede',
+            short: 'Migrate (supersede)'
+          },
+          {
+            name: 'Migrate to .local/ (preserved alongside shared rules)',
+            value: 'migrate-preserve',
+            short: 'Migrate (preserve)'
+          },
+          {
+            name: 'Skip - keep existing configuration as-is',
+            value: 'skip',
+            short: 'Skip'
+          }
+        ],
+        default: 'replace'
+      }
+    ]));
+  }
 
   if (action === 'skip') {
     return 'skip';
@@ -393,39 +403,44 @@ function copyDirectorySync(source, dest) {
   }
 }
 
-async function handleExistingCursorConfig(cursorRulesPath) {
+async function handleExistingCursorConfig(cursorRulesPath, autoYes = false) {
   console.log(chalk.yellow(`\n  ⚠ Existing Cursor configuration detected`));
 
-  const { action } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'action',
-      message: `  How would you like to handle existing .cursorrules file?`,
-      choices: [
-        {
-          name: 'Replace with new setup',
-          value: 'replace',
-          short: 'Replace'
-        },
-        {
-          name: 'Migrate to .cursorrules.local (your rules supersede shared rules)',
-          value: 'migrate-supersede',
-          short: 'Migrate (supersede)'
-        },
-        {
-          name: 'Migrate to .cursorrules.local (preserved alongside shared rules)',
-          value: 'migrate-preserve',
-          short: 'Migrate (preserve)'
-        },
-        {
-          name: 'Skip - keep existing configuration as-is',
-          value: 'skip',
-          short: 'Skip'
-        }
-      ],
-      default: 'replace'
-    }
-  ]);
+  let action;
+  if (autoYes) {
+    action = 'migrate-preserve';
+  } else {
+    ({ action } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'action',
+        message: `  How would you like to handle existing .cursorrules file?`,
+        choices: [
+          {
+            name: 'Replace with new setup',
+            value: 'replace',
+            short: 'Replace'
+          },
+          {
+            name: 'Migrate to .cursorrules.local (your rules supersede shared rules)',
+            value: 'migrate-supersede',
+            short: 'Migrate (supersede)'
+          },
+          {
+            name: 'Migrate to .cursorrules.local (preserved alongside shared rules)',
+            value: 'migrate-preserve',
+            short: 'Migrate (preserve)'
+          },
+          {
+            name: 'Skip - keep existing configuration as-is',
+            value: 'skip',
+            short: 'Skip'
+          }
+        ],
+        default: 'replace'
+      }
+    ]));
+  }
 
   if (action === 'skip') {
     return 'skip';
@@ -467,7 +482,7 @@ async function handleExistingCursorConfig(cursorRulesPath) {
   }
 }
 
-async function setupClaude(language) {
+async function setupClaude(language, autoYes = false) {
   const claudeDir = path.join(PROJECT_ROOT, '.claude');
   const templateDir = path.join(TEMPLATES_DIR, 'claude');
 
@@ -476,7 +491,7 @@ async function setupClaude(language) {
 
   if (hasExisting) {
     // Handle existing configuration
-    const migrated = await handleExistingConfig(claudeDir, 'Claude Code');
+    const migrated = await handleExistingConfig(claudeDir, 'Claude Code', autoYes);
     if (migrated === 'skip') {
       console.log(chalk.gray('  Skipped Claude Code setup'));
       return;
@@ -518,7 +533,7 @@ async function setupClaude(language) {
   const templateWorkflowsDir = path.join(templateDir, 'workflows');
 
   if (fs.existsSync(templateWorkflowsDir) && fs.readdirSync(templateWorkflowsDir).length > 0) {
-  await copyPath(templateWorkflowsDir, workflowsDir, 'workflows directory');
+  await copyPath(templateWorkflowsDir, workflowsDir, 'workflows directory', autoYes);
   }
 
   // Set up hooks directory
@@ -562,20 +577,25 @@ async function setupClaude(language) {
 
   if (fs.existsSync(settingsTemplate)) {
     if (fs.existsSync(settingsTarget)) {
-      const { overwrite } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'overwrite',
-          message: '  settings.json already exists. Overwrite?',
-          default: false,
-        },
-      ]);
-
-      if (overwrite) {
-        fs.copyFileSync(settingsTemplate, settingsTarget);
-        console.log(chalk.green('  ✓ Copied settings.json (project-specific)'));
-      } else {
+      if (autoYes) {
+        // Non-interactive: do not overwrite project-specific settings by default
         console.log(chalk.gray('  Skipped settings.json'));
+      } else {
+        const { overwrite } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'overwrite',
+            message: '  settings.json already exists. Overwrite?',
+            default: false,
+          },
+        ]);
+
+        if (overwrite) {
+          fs.copyFileSync(settingsTemplate, settingsTarget);
+          console.log(chalk.green('  ✓ Copied settings.json (project-specific)'));
+        } else {
+          console.log(chalk.gray('  Skipped settings.json'));
+        }
       }
     } else {
       fs.copyFileSync(settingsTemplate, settingsTarget);
@@ -586,7 +606,7 @@ async function setupClaude(language) {
   console.log(chalk.green('  ✓ Claude Code configuration set up'));
 }
 
-async function setupCursor(language) {
+async function setupCursor(language, autoYes = false) {
   const cursorRulesPath = path.join(PROJECT_ROOT, '.cursorrules');
   const templatePath = path.join(TEMPLATES_DIR, 'cursor', '.cursorrules');
 
@@ -598,14 +618,14 @@ async function setupCursor(language) {
   // Check if .cursorrules already exists
   if (fs.existsSync(cursorRulesPath)) {
     // Handle existing file
-    const migrated = await handleExistingCursorConfig(cursorRulesPath);
+    const migrated = await handleExistingCursorConfig(cursorRulesPath, autoYes);
     if (migrated === 'skip') {
       console.log(chalk.gray('  Skipped Cursor setup'));
       return;
     }
   }
 
-  await copyPath(templatePath, cursorRulesPath, '.cursorrules');
+  await copyPath(templatePath, cursorRulesPath, '.cursorrules', autoYes);
 
   // Create .cursorrules.local for custom overrides
   const cursorLocalPath = path.join(PROJECT_ROOT, '.cursorrules.local');
@@ -617,7 +637,7 @@ async function setupCursor(language) {
   console.log(chalk.green('  ✓ Cursor configuration set up'));
 }
 
-async function setupKilo(language) {
+async function setupKilo(language, autoYes = false) {
   const kiloDir = path.join(PROJECT_ROOT, '.kilocode');
 
   // Check if .kilocode directory already exists with content
@@ -625,7 +645,7 @@ async function setupKilo(language) {
 
   if (hasExisting) {
     // Handle existing configuration
-    const migrated = await handleExistingConfig(kiloDir, 'Kilo Code');
+    const migrated = await handleExistingConfig(kiloDir, 'Kilo Code', autoYes);
     if (migrated === 'skip') {
       console.log(chalk.gray('  Skipped Kilo Code setup'));
       return;
@@ -647,14 +667,14 @@ async function setupKilo(language) {
   // Copy shared rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
+  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules', autoYes);
 
   // Copy language-specific rules
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
 
   if (fs.existsSync(languageRulesSource)) {
-    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
+    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`, autoYes);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -672,7 +692,7 @@ async function setupKilo(language) {
   console.log(chalk.green('  ✓ Kilo Code configuration set up'));
 }
 
-async function setupRoo(language) {
+async function setupRoo(language, autoYes = false) {
   const rooDir = path.join(PROJECT_ROOT, '.roo');
 
   // Check if .roo directory already exists with content
@@ -680,7 +700,7 @@ async function setupRoo(language) {
 
   if (hasExisting) {
     // Handle existing configuration
-    const migrated = await handleExistingConfig(rooDir, 'Roo Code');
+    const migrated = await handleExistingConfig(rooDir, 'Roo Code', autoYes);
     if (migrated === 'skip') {
       console.log(chalk.gray('  Skipped Roo Code setup'));
       return;
@@ -702,14 +722,14 @@ async function setupRoo(language) {
   // Copy shared rules
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
+  await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules', autoYes);
 
   // Copy language-specific rules
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
   const languageRulesDest = path.join(rulesDir, language);
 
   if (fs.existsSync(languageRulesSource)) {
-    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
+    await copyPath(languageRulesSource, languageRulesDest, `${language} rules`, autoYes);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }
@@ -745,30 +765,39 @@ function copyDirectory(src, dest) {
   }
 }
 
-async function copyPath(source, target, name) {
+async function copyPath(source, target, name, autoYes = false) {
   // Always copy (no symlinks)
   const isDirectory = fs.statSync(source).isDirectory();
 
   if (fs.existsSync(target)) {
     const stats = fs.lstatSync(target);
-    const { replace } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'replace',
-        message: `  ${name} exists. Replace with copied templates?`,
-        default: true,
-      },
-    ]);
-
-    if (!replace) {
-      console.log(chalk.gray(`  Skipped ${name}`));
-      return { success: false, usedCopy: true };
-    }
-
-    if (stats.isDirectory()) {
-      fs.rmSync(target, { recursive: true });
+    if (autoYes) {
+      // Non-interactive: replace managed copies silently
+      if (stats.isDirectory()) {
+        fs.rmSync(target, { recursive: true });
+      } else {
+        fs.unlinkSync(target);
+      }
     } else {
-      fs.unlinkSync(target);
+      const { replace } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'replace',
+          message: `  ${name} exists. Replace with copied templates?`,
+          default: true,
+        },
+      ]);
+
+      if (!replace) {
+        console.log(chalk.gray(`  Skipped ${name}`));
+        return { success: false, usedCopy: true };
+      }
+
+      if (stats.isDirectory()) {
+        fs.rmSync(target, { recursive: true });
+      } else {
+        fs.unlinkSync(target);
+      }
     }
   }
 
@@ -913,7 +942,7 @@ async function setupDevFolder(language, isUpdate) {
   console.log(chalk.blue('  ℹ .dev/ is auto-loaded into AI context on every session'));
 }
 
-async function setupCentralizedRules(language, isUpdate) {
+async function setupCentralizedRules(language, isUpdate, autoYes = false) {
   const devDir = path.join(PROJECT_ROOT, '.dev');
   const rulesDir = path.join(devDir, 'rules');
 
@@ -928,7 +957,7 @@ async function setupCentralizedRules(language, isUpdate) {
   // Copy shared rules into provider rules directory
   const sharedRulesSource = path.join(TEMPLATES_DIR, 'shared', 'rules');
   const sharedRulesDest = path.join(rulesDir, 'shared');
-  const sharedResult = await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules');
+  const sharedResult = await copyPath(sharedRulesSource, sharedRulesDest, 'shared rules', autoYes);
 
   // Copy language-specific rules into provider rules directory
   const languageRulesSource = path.join(TEMPLATES_DIR, 'languages', language, 'rules');
@@ -936,7 +965,7 @@ async function setupCentralizedRules(language, isUpdate) {
   let languageResult = { usedCopy: false };
 
   if (fs.existsSync(languageRulesSource)) {
-    languageResult = await copyPath(languageRulesSource, languageRulesDest, `${language} rules`);
+    languageResult = await copyPath(languageRulesSource, languageRulesDest, `${language} rules`, autoYes);
   } else {
     console.log(chalk.yellow(`  ⚠ No ${language} rules available, skipping`));
   }

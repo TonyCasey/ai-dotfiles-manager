@@ -32,6 +32,10 @@ This package provides **centralized configurations** for AI coding CLI assistant
 
 A dotfiles manager for your AI tools!
 
+## Start Here
+
+- [Project Context Index](.dev/context-index.md)
+
 ## Features
 
 - **Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
