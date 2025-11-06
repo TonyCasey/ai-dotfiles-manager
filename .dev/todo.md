@@ -6,7 +6,8 @@
 
 - [ ] Dynamically list actual rule files in the Codex guide (shared + language + .local) and refresh on update.
 - [x] Auto-refresh Codex guide block on any `ai-dotfiles-manager` command (setup, update, review, commit-todo).
-- [ ] Add `--no-codex-guide` flag to skip managing `AGENTS.md` for teams with custom workflows.
+- [x] Add `--no-codex-guide` flag to skip managing `AGENTS.md` for teams with custom workflows.
+- [x] Ensure `--yes` is fully non-interactive (safe defaults; no prompts).
 - [ ] Include a clear file reference example in the guide (path with optional :line; no ranges).
 - [ ] Document JS→TS rules mapping note in the guide when language is JavaScript.
 
@@ -57,10 +58,11 @@
 - [ ] CI: Validate `AGENTS.md` contains the managed Codex block.
 - [ ] CI: Validate `.dev/codex-manifest.json` exists and paths resolve.
 - [ ] Add `npm run codex:doctor` to print manifest, guide status, and missing context files.
+- [x] CI: Smoke run `node bin/setup.js --yes --no-codex-guide` to guard non-interactive path.
 
 ## Delegated to Claude Cloud (Nov 5)
 
-- [ ] Implement `--no-codex-guide` flag and update help/README.
+- [x] Implement `--no-codex-guide` flag and update help/README.
 - [ ] README “Start Here” and CONTRIBUTING with Codex Working Agreement.
 - [ ] Add `templates/codex/prompts/` and reference in AGENTS.
 

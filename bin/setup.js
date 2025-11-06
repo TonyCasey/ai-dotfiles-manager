@@ -22,6 +22,8 @@ const positionals = args.filter(arg => !arg.startsWith('-'));
 const command = positionals[0];
 const commandIndex = typeof command === 'string' ? args.indexOf(command) : -1;
 const AUTO_YES = flags.includes('--yes') || flags.includes('-y');
+// Skip Codex manifest/index and AGENTS.md guide updates when requested
+const NO_CODEX_GUIDE = flags.includes('--no-codex-guide');
 
 // Handle commands
 if (firstArg === '--version' || firstArg === '-v') {
