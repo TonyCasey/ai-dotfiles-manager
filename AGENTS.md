@@ -73,6 +73,7 @@ Key expectations for this repository:
 - Prefer pure functions; isolate IO to scripts/ and bin/.
 - Maintain test coverage ≥ 70% (see `jest.config.js`).
 - Offer fixes that update docs or scripts when behavior changes.
+- Prompt templates live in `templates/codex/prompts/` for quick session kickoffs.
 
 Assistant behavior:
 - Propose changes that align with loaded rules.

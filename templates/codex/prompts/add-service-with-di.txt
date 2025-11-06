@@ -1,0 +1,1 @@
+Add the {Service} service using constructor-based dependency injection, wire it into existing CLI handlers, and provide focused unit tests for the new behavior.

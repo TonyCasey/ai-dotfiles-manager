@@ -1,0 +1,1 @@
+Harden the {Area} test suite by adding regression cases for recent bugs, using fixtures to cover edge inputs, and keeping coverage thresholds green.
