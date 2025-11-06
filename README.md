@@ -35,7 +35,6 @@ A dotfiles manager for your AI tools!
 ## Start Here
 
 - [Project Context Index](.dev/context-index.md)
-- [Architecture Overview](.dev/architecture.md)
 
 ## Features
 
