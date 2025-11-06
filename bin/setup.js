@@ -16,23 +16,27 @@ const getPackageRoot = () => {
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const command = args[0];
+const firstArg = args[0];
 const flags = args.filter(arg => arg.startsWith('-'));
+const positionals = args.filter(arg => !arg.startsWith('-'));
+const command = positionals[0];
+const commandIndex = typeof command === 'string' ? args.indexOf(command) : -1;
 const AUTO_YES = flags.includes('--yes') || flags.includes('-y');
 
 // Handle commands
-if (command === '--version' || command === '-v') {
+if (firstArg === '--version' || firstArg === '-v') {
   console.log(`v${PACKAGE_JSON.version}`);
   process.exit(0);
 }
 
-if (command === '--help' || command === '-h') {
+if (firstArg === '--help' || firstArg === '-h') {
   printHelp();
   process.exit(0);
 }
 
 if (command === 'review') {
-  handleReviewCommand(args.slice(1)).catch((error) => {
+  const reviewArgs = commandIndex >= 0 ? args.slice(commandIndex + 1) : [];
+  handleReviewCommand(reviewArgs).catch((error) => {
     console.error(chalk.red('\n❌ Error during review:'), error);
     process.exit(1);
   });
