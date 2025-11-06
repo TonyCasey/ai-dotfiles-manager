@@ -22,6 +22,8 @@ const positionals = args.filter(arg => !arg.startsWith('-'));
 const command = positionals[0];
 const commandIndex = typeof command === 'string' ? args.indexOf(command) : -1;
 const AUTO_YES = flags.includes('--yes') || flags.includes('-y');
+// Skip Codex manifest/index and AGENTS.md guide updates when requested
+const NO_CODEX_GUIDE = flags.includes('--no-codex-guide');
 
 // Handle commands
 if (firstArg === '--version' || firstArg === '-v') {
@@ -69,7 +71,8 @@ function printHelp() {
   console.log(chalk.gray('  --version, -v     Show version number'));
   console.log(chalk.gray('  --help, -h        Show this help message\n'));
   console.log(chalk.white('Global Options:'));
-  console.log(chalk.gray('  --yes, -y         Accept all defaults, skip interactive prompts\n'));
+  console.log(chalk.gray('  --yes, -y         Accept all defaults, skip interactive prompts'));
+  console.log(chalk.gray('  --no-codex-guide  Skip generating Codex manifest/index and AGENTS guide block\n'));
   console.log(chalk.white('Review Options:'));
   console.log(chalk.gray('  --detailed        Show detailed information including info-level messages'));
   console.log(chalk.gray('  --json            Output results as JSON'));
@@ -204,9 +207,11 @@ async function main(isUpdate = false, autoYes = false) {
   await setupCentralizedRules(language, isUpdate, autoYes);
 
   // Generate Codex manifest/index and session guide
-  const discovered = discoverRuleFiles(language);
-  await writeCodexManifestAndIndex(language, discovered);
-  await setupCodexGuide(language, isUpdate, discovered);
+  if (!NO_CODEX_GUIDE) {
+    const discovered = discoverRuleFiles(language);
+    await writeCodexManifestAndIndex(language, discovered);
+    await setupCodexGuide(language, isUpdate, discovered);
+  }
 
   // Set up TypeScript configuration files if TypeScript project
   if (language === 'typescript') {
@@ -1521,13 +1526,15 @@ function generateContextIndex(language, files) {
 
 async function handleCommitTodoCommand() {
   // Auto-refresh Codex guide block on any command
-  try {
-    const language = detectLanguage(PROJECT_ROOT) || 'typescript';
-    const discovered = discoverRuleFiles(language);
-    await writeCodexManifestAndIndex(language, discovered);
-    await setupCodexGuide(language, true, discovered);
-  } catch (_) {
-    // Non-fatal if Codex guide update fails
+  if (!NO_CODEX_GUIDE) {
+    try {
+      const language = detectLanguage(PROJECT_ROOT) || 'typescript';
+      const discovered = discoverRuleFiles(language);
+      await writeCodexManifestAndIndex(language, discovered);
+      await setupCodexGuide(language, true, discovered);
+    } catch (_) {
+      // Non-fatal if Codex guide update fails
+    }
   }
 
   const { enforceCommitPolicy, checkUncommittedWork } = require('../templates/dev/hooks/todo-commit.js');
@@ -1549,13 +1556,15 @@ async function handleCommitTodoCommand() {
 
 async function handleReviewCommand(reviewArgs) {
   // Auto-refresh Codex guide block on any command
-  try {
-    const language = detectLanguage(PROJECT_ROOT) || 'typescript';
-    const discovered = discoverRuleFiles(language);
-    await writeCodexManifestAndIndex(language, discovered);
-    await setupCodexGuide(language, true, discovered);
-  } catch (_) {
-    // Non-fatal if Codex guide update fails
+  if (!NO_CODEX_GUIDE) {
+    try {
+      const language = detectLanguage(PROJECT_ROOT) || 'typescript';
+      const discovered = discoverRuleFiles(language);
+      await writeCodexManifestAndIndex(language, discovered);
+      await setupCodexGuide(language, true, discovered);
+    } catch (_) {
+      // Non-fatal if Codex guide update fails
+    }
   }
 
   const CodeReviewer = require('../scripts/review.js');

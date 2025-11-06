@@ -50,6 +50,7 @@ A dotfiles manager for your AI tools!
 - **Multi-Language Support**: TypeScript, Python, Go, Java, and more (see [Multi-Language Support](#multi-language-support))
 - **TypeScript Configuration**: Strict tsconfig.json, tsconfig.test.json, tsconfig.eslint.json, and .eslintrc.json automatically added to TypeScript projects
 - **Code Quality Rules Guide**: Comprehensive documentation of TypeScript and ESLint rules with error prevention examples
+- **Optional Codex Guide Opt-Out**: Use `--no-codex-guide` to skip generating Codex manifest/index files and the AGENTS guide block
 - **Pre-PR Review Command**: `/review-changes` command for comprehensive code review before pushing changes
 - **Pre-Push Hook**: Automatic review trigger that prevents pushing code with critical issues
 - **Testing Guidelines**: Patterns for repository and service tests with mocking
@@ -449,6 +450,12 @@ ai-dotfiles-manager setup -y
 
 Creates configuration files in your project directory.
 
+Need to keep your own AGENTS.md content or skip Codex context artifacts? Append `--no-codex-guide` to omit `.dev/codex-manifest.json`, `.dev/context-index.md`, and the managed Codex guide block:
+
+```bash
+ai-dotfiles-manager setup --yes --no-codex-guide
+```
+
 ### `update` - Update Configuration
 
 Update existing configuration with latest templates:
@@ -478,6 +485,9 @@ ai-dotfiles-manager review --detailed
 
 # JSON output (for CI/CD integration)
 ai-dotfiles-manager review --json
+
+# Skip Codex guide refresh (no manifest/index updates)
+ai-dotfiles-manager review --detailed --no-codex-guide
 ```
 
 **What it checks:**
