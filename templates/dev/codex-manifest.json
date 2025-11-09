@@ -1,5 +1,6 @@
 {
   "load": [
+    ".dev/DESIGNcode.md",
     ".dev/architecture.md",
     ".dev/todo.md",
     ".dev/lint/jetbrains-lint.md",

@@ -174,6 +174,8 @@ async function main(isUpdate = false, autoYes = false) {
           { name: 'Cursor', value: 'cursor', checked: false },
           { name: 'Kilo Code', value: 'kilo', checked: false },
           { name: 'Roo Code', value: 'roo', checked: false },
+          new inquirer.Separator(),
+          { name: '🚫 None (Codex only — skip provider folders)', value: 'none', checked: false },
         ],
       },
     ]);
@@ -182,13 +184,15 @@ async function main(isUpdate = false, autoYes = false) {
     if (selectedTools.includes('all')) {
       tools = ['claude', 'cursor', 'kilo', 'roo'];
       console.log(chalk.gray('\n  → All tools selected'));
+    } else if (selectedTools.includes('none')) {
+      tools = [];
+      console.log(chalk.gray('\n  → Codex-only workflow (no provider folders)'));
     } else {
       tools = selectedTools;
     }
 
-    if (tools.length === 0) {
-      console.log(chalk.yellow('No tools selected. Exiting.'));
-      return;
+    if (tools.length === 0 && !selectedTools.includes('none')) {
+      console.log(chalk.gray('\n  → No provider folders selected'));
     }
   }
 
@@ -208,6 +212,7 @@ async function main(isUpdate = false, autoYes = false) {
 
   // Generate Codex manifest/index and session guide
   if (!NO_CODEX_GUIDE) {
+    ensureAgentsTemplate();
     const discovered = discoverRuleFiles(language);
     await writeCodexManifestAndIndex(language, discovered);
     await setupCodexGuide(language, isUpdate, discovered);
@@ -923,8 +928,16 @@ async function setupDevFolder(language, isUpdate) {
     console.log(chalk.green('  ✓ Created README.md'));
   }
 
-  // Sync managed lint guides into .dev/lint
+  // Copy Codex bootstrap instructions (always overwrite to keep in sync)
   const devTemplatesDir = path.join(TEMPLATES_DIR, 'dev');
+  const designSource = path.join(devTemplatesDir, 'DESIGNcode.md');
+  if (fs.existsSync(designSource)) {
+    const designDest = path.join(devDir, 'DESIGNcode.md');
+    fs.copyFileSync(designSource, designDest);
+    console.log(chalk.green('  ✓ Synced DESIGNcode.md Codex bootstrap'));
+  }
+
+  // Sync managed lint guides into .dev/lint
   const lintTemplateDir = path.join(devTemplatesDir, 'lint');
   const lintDestDir = path.join(devDir, 'lint');
   if (fs.existsSync(lintTemplateDir)) {
@@ -1342,10 +1355,17 @@ All .md files in .dev/ will be loaded into AI context.
 }
 
 function printNextSteps(tools, language, isUpdate = false) {
+  const toolSummary = tools.length
+    ? tools.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')
+    : 'none (Codex only)';
+
   if (isUpdate) {
     console.log(chalk.bold('✨ Configuration Updated:\n'));
     console.log(chalk.gray(`Language: ${language}`));
-    console.log(chalk.gray('Updated tools: ' + tools.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ') + '\n'));
+    console.log(chalk.gray(`Updated tools: ${toolSummary}\n`));
+    if (!tools.length) {
+      console.log(chalk.gray('No provider folders selected — Codex will load .dev context only.\n'));
+    }
     console.log(chalk.green('Your AI coding assistants now have the latest templates and rules!\n'));
     console.log(chalk.blue('💡 Run "ai-dotfiles-manager review" to check for architecture violations\n'));
     return;
@@ -1353,6 +1373,12 @@ function printNextSteps(tools, language, isUpdate = false) {
 
   console.log(chalk.bold('📋 Next Steps:\n'));
   console.log(chalk.gray(`Language: ${language}\n`));
+
+  if (!tools.length) {
+    console.log(chalk.white('Codex (no provider folders):'));
+    console.log(chalk.gray('  • .dev workspace + DESIGNcode.md copied for Codex session bootstrap'));
+    console.log(chalk.gray('  • No .claude/.cursor/.kilo/.roo folders were installed\n'));
+  }
 
   if (tools.includes('claude')) {
     console.log(chalk.white('Claude Code:'));
@@ -1436,6 +1462,22 @@ async function setupCodexGuide(language, isUpdate, cachedFiles) {
   }
 }
 
+function ensureAgentsTemplate() {
+  const templatePath = path.join(TEMPLATES_DIR, 'AGENTS.md');
+  const destPath = path.join(PROJECT_ROOT, 'AGENTS.md');
+
+  if (!fs.existsSync(templatePath) || fs.existsSync(destPath)) {
+    return;
+  }
+
+  try {
+    fs.copyFileSync(templatePath, destPath);
+    console.log(chalk.green('  ✓ Copied default AGENTS.md template'));
+  } catch (error) {
+    console.log(chalk.yellow(`  ⚠ Unable to copy AGENTS.md template: ${error.message}`));
+  }
+}
+
 function discoverRuleFiles(language) {
   const devDir = path.join(PROJECT_ROOT, '.dev');
   const rulesDir = path.join(devDir, 'rules');
@@ -1470,6 +1512,9 @@ async function writeCodexManifestAndIndex(language, files) {
   const indexPath = path.join(devDir, 'context-index.md');
 
   const ordered = [];
+  const design = path.join('.dev', 'DESIGNcode.md');
+  const designAbs = path.join(PROJECT_ROOT, design);
+  if (fs.existsSync(designAbs)) ordered.push(design);
   const arch = path.join('.dev', 'architecture.md');
   const archAbs = path.join(PROJECT_ROOT, arch);
   if (fs.existsSync(archAbs)) ordered.push(arch);
@@ -1502,6 +1547,7 @@ function generateContextIndex(language, files) {
   lines.push('This index lists key context files Codex should consult.');
   lines.push('');
   lines.push('## Core');
+  lines.push('- `.dev/DESIGNcode.md` (Codex bootstrap)');
   lines.push('- `.dev/architecture.md`');
   lines.push('- `.dev/todo.md` (if present)');
   lines.push('');
@@ -1529,6 +1575,7 @@ async function handleCommitTodoCommand() {
   if (!NO_CODEX_GUIDE) {
     try {
       const language = detectLanguage(PROJECT_ROOT) || 'typescript';
+      ensureAgentsTemplate();
       const discovered = discoverRuleFiles(language);
       await writeCodexManifestAndIndex(language, discovered);
       await setupCodexGuide(language, true, discovered);

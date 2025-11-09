@@ -8,6 +8,7 @@
 - [x] Auto-refresh Codex guide block on any `ai-dotfiles-manager` command (setup, update, review, commit-todo).
 - [x] Add `--no-codex-guide` flag to skip managing `AGENTS.md` for teams with custom workflows.
 - [x] Ensure `--yes` is fully non-interactive (safe defaults; no prompts).
+- [x] Copy `templates/AGENTS.md` + `.dev/DESIGNcode.md` into projects and pin them to the Codex manifest load order.
 - [ ] Include a clear file reference example in the guide (path with optional :line; no ranges).
 - [ ] Document JS→TS rules mapping note in the guide when language is JavaScript.
 
