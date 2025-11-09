@@ -1,1 +1,12 @@
+# Test coverage
 /coverage/
+
+# Build output
+/dist/
+
+# Local AI session artifacts
+.dev/.prompt-log.jsonl
+.dev/.session-state.json
+.dev/.session-stats.json
+.dev/todo.md
+.dev/architecture.md

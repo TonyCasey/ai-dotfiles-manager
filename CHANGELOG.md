@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **Codex Bootstrap File**: `DESIGNcode.md` now syncs into every project's `.dev/` folder and is pinned to the top of the Codex manifest/index so sessions always start with the bootstrap checklist.
+- **Provider Selection "None" Option**: Setup/update prompts include a “None (Codex only)” option so teams running Codex-only flows can skip installing `.claude/`, `.cursor/`, `.kilo/`, or `.roo/` while still refreshing `.dev`.
+- **Managed AGENTS.md Template**: `templates/AGENTS.md` now copies into projects (if missing) before the Codex guide injection so every install has the baseline repository guide.
+
 ### Clarified
 - Deprecated provider-specific rule folders and shortcut copies; all installs now read rules from centralized `.dev/rules/` (shared). Base rules are linked from the package (copy fallback on Windows).
 

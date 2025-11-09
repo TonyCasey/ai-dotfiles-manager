@@ -1,0 +1,22 @@
+{
+  "load": [
+    ".dev/DESIGNcode.md",
+    ".dev/architecture.md",
+    ".dev/todo.md",
+    ".dev/lint/jetbrains-lint.md",
+    ".dev/rules/shared/clean-architecture.md",
+    ".dev/rules/shared/code-quality-rules.md",
+    ".dev/rules/shared/dev-workspace.md",
+    ".dev/rules/shared/repository-pattern.md",
+    ".dev/rules/shared/testing-principles.md",
+    ".dev/rules/typescript/coding-standards.md",
+    ".dev/rules/typescript/testing.md",
+    ".dev/rules/typescript/typescript-config-guide.md",
+    ".dev/rules/.local/README.md"
+  ],
+  "precedence": [
+    ".dev/rules/.local",
+    ".dev/rules/typescript",
+    ".dev/rules/shared"
+  ]
+}

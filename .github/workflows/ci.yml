@@ -24,6 +24,14 @@ jobs:
       - name: Verify managed copies (no symlinks)
         run: node scripts/ci-verify-managed-copies.js
 
+      - name: Smoke run setup (no guide)
+        run: node bin/setup.js --yes --no-codex-guide
+
+      - name: Generate manifest/index
+        run: node bin/setup.js --yes
+
+      - name: Verify codex manifest
+        run: node scripts/ci-verify-codex-manifest.js
+
       - name: Run tests
         run: npm test --silent
-
