@@ -265,6 +265,24 @@ export interface IProductRepository {
 export interface ProductService { ... }  // Missing 'I' prefix
 ```
 
+### Types
+
+**Append `Types` to exported `type` aliases and never prefix them with `I`:**
+
+```typescript
+// ✅ GOOD
+export type PaginationFilterTypes = {
+  status: 'active' | 'inactive';
+  page: number;
+};
+
+// ❌ BAD
+export type IPaginationFilter = { /* ... */ }; // `I` prefixes are reserved for interfaces
+export type PaginationFilter = { /* ... */ };   // Missing the required `Types` suffix
+```
+
+Keep filenames aligned with the exported alias (e.g., `PaginationFilterTypes.ts` exports `PaginationFilterTypes`).
+
 ### Classes
 
 **PascalCase for classes:**
@@ -349,10 +367,10 @@ export interface IOrderService { ... }
 export interface IUserService { ... }
 ```
 
-**Exception:** Small, related interfaces can be together:
+**Exception:** Small, related interfaces or helper types can live together in a `*Types` file (no `I` prefix on the filename):
 
 ```typescript
-// File: IPaginationTypes.ts
+// File: PaginationTypes.ts
 export interface IPaginationRequest {
   page: number;
   pageSize: number;
@@ -367,68 +385,83 @@ export interface IPaginationResponse<T> {
 
 ### Index Files for Clean Imports
 
-Use `AgentEnums.ts` files to export from directories:
+Use `AgentEnums.ts` (or `index.ts`) files to re-export shared contracts:
 
 ```typescript
 // File: src/domain/interfaces/AgentEnums.ts
-export { IProductRepository } from './IProductRepository';
-export { IOrderRepository } from './IOrderRepository';
-export { IUserRepository } from './IUserRepository';
+export { IGenericRepository } from './IGenericRepository';
+export type ProductRepositoryTypes = IGenericRepository<IProduct>;
+export type OrderRepositoryTypes = IGenericRepository<IOrder>;
 
 // Now you can import as:
-import { IProductRepository, IOrderRepository } from '@/domain/interfaces';
+import { ProductRepositoryTypes } from '@/domain/interfaces';
 ```
 
 ## Clean Architecture Implementation
 
-### Repository Interface (Domain)
+### Generic Repository Contract (Domain)
 
 ```typescript
-// File: src/domain/interfaces/IProductRepository.ts
-import { IProduct } from '../entities/IProduct';
-
-export interface IProductRepository {
-  getById(id: string): Promise<IProduct | null>;
-  save(product: IProduct): Promise<void>;
+// File: src/domain/interfaces/IGenericRepository.ts
+export interface IGenericRepository<T> {
+  getById(id: string): Promise<T | null>;
+  save(entity: T): Promise<void>;
   delete(id: string): Promise<void>;
-  findByCategory(categoryId: string): Promise<IProduct[]>;
+  findByIds(ids: string[]): Promise<T[]>;
+  findByField<K extends keyof T>(field: K, value: T[K]): Promise<T[]>;
 }
 ```
 
 ### Repository Implementation (Infrastructure)
 
 ```typescript
-// File: src/infrastructure/repositories/ProductRepository.ts
-import { IProductRepository } from '@/domain/interfaces/IProductRepository';
-import { IProduct } from '@/domain/entities/IProduct';
+// File: src/infrastructure/repositories/GenericRepository.ts
+import { IGenericRepository } from '@/domain/interfaces/IGenericRepository';
 import { IDatabaseService } from '../interfaces/IDatabaseService';
-import { ProductNotFoundError } from '@/domain/errors/ProductNotFoundError';
+import { RepositoryError } from '@/domain/errors/RepositoryError';
 
-export class ProductRepository implements IProductRepository {
-  constructor(private readonly db: IDatabaseService) {}
+export class GenericRepository<T extends { id: string }>
+  implements IGenericRepository<T>
+{
+  constructor(
+    private readonly collection: string,
+    private readonly db: IDatabaseService
+  ) {}
 
-  async getById(id: string): Promise<IProduct | null> {
+  async getById(id: string): Promise<T | null> {
     try {
-      const doc = await this.db.readDocDataAtPath(`products/${id}`);
-      return doc ? (doc as IProduct) : null;
+      const doc = await this.db.readDocDataAtPath(`${this.collection}/${id}`);
+      return (doc as T) ?? null;
     } catch (error) {
-      throw new RepositoryError(`Failed to fetch product: ${id}`, { originalError: error });
+      throw new RepositoryError(`Failed to fetch ${this.collection}#${id}`, {
+        originalError: error
+      });
     }
   }
 
-  async save(product: IProduct): Promise<void> {
-    await this.db.writeDocDataAtPath(`products/${product.id}`, product);
+  async save(entity: T): Promise<void> {
+    await this.db.writeDocDataAtPath(`${this.collection}/${entity.id}`, entity);
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.deleteDocAtPath(`products/${id}`);
+    await this.db.deleteDocAtPath(`${this.collection}/${id}`);
   }
 
-  async findByCategory(categoryId: string): Promise<IProduct[]> {
-    const docs = await this.db.queryCollection('products', {
-      where: ['categoryId', '==', categoryId]
+  async findByIds(ids: string[]): Promise<T[]> {
+    const docs = await this.db.getDocsAtPaths(
+      ids.map(id => `${this.collection}/${id}`)
+    );
+    return docs.filter(Boolean) as T[];
+  }
+
+  async findByField<K extends keyof T>(
+    field: K,
+    value: T[K]
+  ): Promise<T[]> {
+    const docs = await this.db.queryCollection(this.collection, {
+      where: [field as string, '==', value]
     });
-    return docs as IProduct[];
+    return docs as T[];
   }
 }
 ```
@@ -438,18 +471,26 @@ export class ProductRepository implements IProductRepository {
 ```typescript
 // File: src/application/services/ProductService.ts
 import { IProductService } from '../interfaces/IProductService';
-import { IProductRepository } from '@/domain/interfaces/IProductRepository';
+import { IGenericRepository } from '@/domain/interfaces/IGenericRepository';
+import { GenericRepository } from '@/infrastructure/repositories/GenericRepository';
 import { IProduct } from '@/domain/entities/IProduct';
+import { ILogger } from '@/domain/interfaces/ILogger';
+import { IDatabaseService } from '@/infrastructure/interfaces/IDatabaseService';
 import { ProductNotFoundError } from '@/domain/errors/ProductNotFoundError';
 
 export class ProductService implements IProductService {
+  private readonly products: IGenericRepository<IProduct>;
+
   constructor(
-    private readonly productRepository: IProductRepository,
+    private readonly db: IDatabaseService,
     private readonly logger: ILogger
-  ) {}
+  ) {
+    // Inject as the interface type, new up the implementation inside
+    this.products = new GenericRepository<IProduct>('products', db);
+  }
 
   async getProduct(id: string): Promise<IProduct> {
-    const product = await this.productRepository.getById(id);
+    const product = await this.products.getById(id);
 
     if (!product) {
       this.logger.warn('Product not found', { productId: id });
@@ -461,10 +502,6 @@ export class ProductService implements IProductService {
   }
 
   async createProduct(data: CreateProductData): Promise<IProduct> {
-    // Validation
-    this.validateProductData(data);
-
-    // Create entity
     const product: IProduct = {
       id: generateId(),
       ...data,
@@ -472,61 +509,47 @@ export class ProductService implements IProductService {
       updatedAt: new Date()
     };
 
-    // Save
-    await this.productRepository.save(product);
-
+    await this.products.save(product);
     this.logger.info('Product created', { productId: product.id });
-    return product;
-  }
 
-  private validateProductData(data: CreateProductData): void {
-    if (!data.name || data.name.trim().length === 0) {
-      throw new ValidationError('Product name is required');
-    }
-    if (data.price <= 0) {
-      throw new ValidationError('Product price must be positive');
-    }
+    return product;
   }
 }
 ```
 
 ## Constructor Injection
 
-**ALWAYS use constructor injection for dependencies:**
+**Inject infrastructure dependencies, then instantiate repositories inside the constructor:**
 
 ```typescript
-// ✅ GOOD - Constructor injection
+// ✅ GOOD - Inject DB/logger, new up repositories as interfaces
 export class OrderService implements IOrderService {
-  constructor(
-    private readonly orderRepository: IOrderRepository,
-    private readonly productRepository: IProductRepository,
-    private readonly logger: ILogger
-  ) {}
+  private readonly orders: IGenericRepository<IOrder>;
+  private readonly products: IGenericRepository<IProduct>;
 
-  async createOrder(data: CreateOrderData): Promise<IOrder> {
-    // Use injected dependencies
-    const products = await this.productRepository.findByIds(data.productIds);
-    // ...
+  constructor(
+    private readonly db: IDatabaseService,
+    private readonly logger: ILogger
+  ) {
+    this.orders = new GenericRepository<IOrder>('orders', db);
+    this.products = new GenericRepository<IProduct>('products', db);
   }
 }
 
-// ❌ BAD - Direct instantiation
+// ❌ BAD - Reach out to globals instead of injecting dependencies
 export class OrderService implements IOrderService {
-  async createOrder(data: CreateOrderData): Promise<IOrder> {
-    const orderRepo = new OrderRepository(); // Hard to test!
-    // ...
-  }
+  private readonly orders = new GenericRepository<IOrder>('orders', globalDb); // Hard to test
 }
 ```
 
 ### Readonly Dependencies
 
-Mark injected dependencies as `readonly`:
+Mark injected dependencies (db, logger, config) as `readonly`:
 
 ```typescript
 constructor(
-  private readonly orderRepository: IOrderRepository,  // ✅ readonly
-  private readonly logger: ILogger                     // ✅ readonly
+  private readonly db: IDatabaseService,
+  private readonly logger: ILogger
 ) {}
 ```
 

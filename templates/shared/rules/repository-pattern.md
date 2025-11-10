@@ -37,28 +37,34 @@ The Repository pattern mediates between the domain and data mapping layers, acti
 
 ## Structure
 
-### Interface in Domain Layer
+### Generic Repository Contract (Required)
 
-Repository interfaces (contracts) belong in the domain layer because they define what the business needs.
+- Define a single `IGenericRepository<T>` interface in the domain layer with the common CRUD surface.
+- Provide a concrete `GenericRepository<T>` implementation in the infrastructure layer that knows how to talk to the backing store.
+- When you need to work with a specific aggregate, declare a variable (or class property) of type `IGenericRepository<Product>` and assign it to `new GenericRepository<Product>(...)`. Example: `const productRepository: IGenericRepository<Product> = new GenericRepository<Product>(deps);`
+- You may create thin factory helpers (e.g., `createProductRepository()`), but avoid duplicating per-entity repository classes.
 
-**Location:** `src/domain/interfaces/`
+### Service Composition Rule
 
-**Responsibilities:**
-- Define data operations (CRUD)
-- Use domain entities as parameters/returns
-- Define business-oriented methods
+- Services must depend on the `IGenericRepository<T>` interface but instantiate the concrete implementation inside the service constructor (or equivalent setup). This keeps the dependency type-safe while making the instantiation explicit: the interface is “injected” by virtue of being the field type, and the service owns the `new` call.
+- Example (TypeScript):
+
+  ```typescript
+  export class ProductService {
+    private readonly products: IGenericRepository<IProduct>;
+
+    constructor() {
+      this.products = new GenericRepository<IProduct>({ collection: 'products' });
+    }
+  }
+  ```
+
+- Tests can replace `this.products` with a mock that satisfies `IGenericRepository<IProduct>` because the rest of the code only talks to the interface.
 
 ### Implementation in Infrastructure Layer
 
-Repository implementations belong in infrastructure because they deal with external systems.
-
-**Location:** `src/infrastructure/repositories/`
-
-**Responsibilities:**
-- Implement domain interface
-- Handle database connections
-- Map between database and domain entities
-- Handle data access errors
+- The `GenericRepository<T>` implementation still lives in `src/infrastructure/repositories/` because it contains IO concerns.
+- It should accept the infrastructure-specific dependencies (collection name, table, datasource, etc.) via constructor parameters so that services can pass the correct context when they `new` it up.
 
 ## Common Operations
 
@@ -89,18 +95,15 @@ For large collections:
 
 ## Design Guidelines
 
-### 1. One Repository Per Aggregate Root
+### 1. Typed Generic Instances Per Aggregate
 
-Each domain aggregate gets one repository.
+Every aggregate still gets its own logical repository, but it is created by parameterizing the shared `IGenericRepository<T>` contract instead of creating a bespoke class.
 
-**Good:**
-- `ProductRepository` (for Product aggregate)
-- `OrderRepository` (for Order aggregate)
-- `CustomerRepository` (for Customer aggregate)
+**Example:**
+- `const productRepository: IGenericRepository<Product> = new GenericRepository<Product>(...)`
+- `const orderRepository: IGenericRepository<Order> = new GenericRepository<Order>(...)`
 
-**Bad:**
-- `DataRepository` (too generic)
-- `ProductAndOrderRepository` (handles multiple aggregates)
+Avoid catch-all instances that mix aggregates; create a dedicated generic instance per aggregate so configuration (collection name, table, etc.) stays isolated.
 
 ### 2. Use Domain Entities
 
@@ -110,20 +113,18 @@ Repositories work with domain entities, not DTOs or database models.
 **Output:** Domain entities
 **Internal:** Database models (hidden from domain)
 
-### 3. Keep Interfaces Focused
+### 3. Keep Operations Focused
 
-Repositories should be focused on data access, not business logic.
+`IGenericRepository<T>` should stay lean (CRUD + simple filters). If you need specialized queries, compose them outside the repository via specification objects or helper functions that call into the generic contract. This keeps the interface stable and prevents “kitchen sink” repositories.
 
-**Good methods:**
-- `getById(id)`
-- `save(entity)`
-- `delete(id)`
-- `findByStatus(status)`
+**Prefer:**
+- `productRepository.findByIds(ids)` implemented via a shared helper that still delegates to the generic repo
+- Specification objects that encapsulate a complex filter and pass it to the generic repo
 
-**Bad methods:**
-- `calculateOrderTotal(id)` (business logic)
-- `sendEmailToCustomer(id)` (side effect)
-- `validateProduct(product)` (validation)
+**Avoid:**
+- Embedding business logic (`calculateOrderTotal`)
+- Triggering side effects (`sendEmailToCustomer`)
+- Mixing validation logic inside the repository
 
 ### 4. Handle Errors Appropriately
 
@@ -137,22 +138,14 @@ Repositories should translate data access errors into domain errors.
 
 ## Common Patterns
 
-### 1. Generic Repository Base
+### 1. Generic Repository Base (Standard)
 
-Create a base interface for common operations:
+All new repositories MUST go through the shared `IGenericRepository<T>` contract. Do not create bespoke repository classes unless you have proven the generic abstraction cannot satisfy a use case.
 
 **Benefits:**
-- Reduces code duplication
-- Consistent interface across repositories
-- Easy to add new repositories
-
-**When to use:**
-- Most repositories need similar operations
-- You want consistency
-
-**When to avoid:**
-- Repositories have very different operations
-- Forces unnecessary methods
+- Single place to test and harden data-access behavior
+- Consistent interface across aggregates
+- Services can swap the implementation (real vs mock) by targeting the same contract
 
 ### 2. Specification Pattern
 
@@ -267,17 +260,17 @@ Test repository implementations:
 
 **Solution:** Use domain language in interface
 
-### ❌ Generic Repository with Unused Methods
-
-**Problem:** Repository forced to implement methods it doesn't need
-
-**Solution:** Use focused interfaces or optional methods
-
 ### ❌ Anemic Repository
 
 **Problem:** Repository is just a thin wrapper with no value
 
 **Solution:** If it's just pass-through, you might not need the pattern
+
+### ❌ Bypassing the Generic Repository
+
+**Problem:** Creating ad-hoc repository classes or hitting the datasource directly
+
+**Solution:** Always go through `IGenericRepository<T>` so behavior stays consistent and test doubles work
 
 ## When NOT to Use Repository Pattern
 
@@ -296,33 +289,23 @@ The repository pattern isn't always necessary:
 - Complex querying logic
 - Team needs consistent data access patterns
 
-## Dependency Injection
+## Interface-Centric Instantiation
 
-Repositories should be injected, not instantiated:
-
-**Why:**
-- Loose coupling
-- Easy to test (inject mocks)
-- Configuration flexibility
-- Dependency clarity
-
-**How:**
-- Register repositories in DI container
-- Inject interface, not implementation
-- Constructor injection preferred
+- Declare repository fields as `IGenericRepository<T>` inside services/use cases.
+- Instantiate the concrete `GenericRepository<T>` inside the constructor (or a factory method) and pass in the infrastructure dependencies the service already owns.
+- For tests, assign a mock that implements `IGenericRepository<T>` to the same field—because the rest of the code only talks to the interface, no other changes are needed.
+- If you use a DI container, have it provide the dependencies required by `GenericRepository<T>` (e.g., datasource, logger). The service still performs the `new` so the pattern remains explicit.
 
 ## Summary Checklist
 
-- [ ] Repository interface in domain layer
-- [ ] Repository implementation in infrastructure layer
-- [ ] One repository per aggregate root
-- [ ] Methods use domain entities
-- [ ] Error handling transforms to domain errors
-- [ ] Registered in DI container
-- [ ] Services depend on interface, not implementation
-- [ ] Tests cover both unit (mocked) and integration (real DB)
-- [ ] No business logic in repository
-- [ ] Consistent error handling across repositories
+- [ ] `IGenericRepository<T>` defined in the domain layer
+- [ ] `GenericRepository<T>` lives in infrastructure and handles IO
+- [ ] Each aggregate receives its own configured `IGenericRepository<Entity>` instance
+- [ ] Services store repositories as the interface type and instantiate them internally
+- [ ] Tests replace the interface with mocks when needed
+- [ ] Repositories operate only on domain entities and translate errors appropriately
+- [ ] No business logic or side effects in repositories
+- [ ] Consistent error handling and specification support across aggregates
 
 ## Language-Specific Examples
 
