@@ -5,6 +5,7 @@ This index lists key context files Codex should consult.
 ## Core
 - `.dev/DESIGNcode.md` (Codex bootstrap)
 - `.dev/architecture.md`
+- `.dev/feature.md`
 - `.dev/todo.md` (if present)
 
 ## Rules (precedence: .local > language > shared)

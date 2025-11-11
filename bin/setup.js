@@ -171,6 +171,7 @@ async function main(isUpdate = false, autoYes = false) {
           { name: '✨ Select All', value: 'all', checked: true },
           new inquirer.Separator(),
           { name: 'Claude Code', value: 'claude', checked: true },
+          { name: 'Gemini CLI', value: 'gemini', checked: true },
           { name: 'Cursor', value: 'cursor', checked: false },
           { name: 'Kilo Code', value: 'kilo', checked: false },
           { name: 'Roo Code', value: 'roo', checked: false },
@@ -182,7 +183,7 @@ async function main(isUpdate = false, autoYes = false) {
 
     // Handle "Select All" option
     if (selectedTools.includes('all')) {
-      tools = ['claude', 'cursor', 'kilo', 'roo'];
+      tools = ['claude', 'gemini', 'cursor', 'kilo', 'roo'];
       console.log(chalk.gray('\n  → All tools selected'));
     } else if (selectedTools.includes('none')) {
       tools = [];
@@ -265,6 +266,8 @@ async function setupTool(tool, language, autoYes) {
 
   if (tool === 'claude') {
     await setupClaude(language, autoYes);
+  } else if (tool === 'gemini') {
+    await setupGemini(language, autoYes);
   } else if (tool === 'cursor') {
     await setupCursor(language, autoYes);
   } else if (tool === 'kilo') {
@@ -616,6 +619,61 @@ async function setupClaude(language, autoYes = false) {
   console.log(chalk.green('  ✓ Claude Code configuration set up'));
 }
 
+async function setupGemini(language, autoYes = false) {
+  const geminiDir = path.join(PROJECT_ROOT, '.gemini');
+  const templateDir = path.join(TEMPLATES_DIR, 'gemini');
+
+  // Check if .gemini directory already exists with content
+  const hasExisting = fs.existsSync(geminiDir) && fs.readdirSync(geminiDir).length > 0;
+
+  if (hasExisting) {
+    // Handle existing configuration
+    const migrated = await handleExistingConfig(geminiDir, 'Gemini CLI', autoYes);
+    if (migrated === 'skip') {
+      console.log(chalk.gray('  Skipped Gemini CLI setup'));
+      return;
+    }
+  } else {
+    // Create .gemini directory if it doesn't exist
+    fs.mkdirSync(geminiDir, { recursive: true });
+    console.log(chalk.gray('  Created .gemini directory'));
+  }
+
+  // Set up hooks directory
+  const hooksDir = path.join(geminiDir, 'hooks');
+  const templateHooksDir = path.join(templateDir, 'hooks');
+
+  if (fs.existsSync(templateHooksDir) && fs.readdirSync(templateHooksDir).length > 0) {
+    await copyPath(templateHooksDir, hooksDir, 'hooks directory', autoYes);
+    console.log(chalk.blue('  ℹ Hooks will run automatically on session start/end'));
+  }
+
+  // Set up commands directory
+  const commandsDir = path.join(geminiDir, 'commands');
+  const templateCommandsDir = path.join(templateDir, 'commands');
+
+  if (fs.existsSync(templateCommandsDir) && fs.readdirSync(templateCommandsDir).length > 0) {
+    await copyPath(templateCommandsDir, commandsDir, 'commands directory', autoYes);
+    console.log(chalk.blue('  ℹ Commands are available for use.'));
+  }
+
+  // Copy settings.json
+  const settingsTemplate = path.join(templateDir, 'settings.json');
+  const settingsTarget = path.join(geminiDir, 'settings.json');
+  if (fs.existsSync(settingsTemplate)) {
+    await copyPath(settingsTemplate, settingsTarget, 'settings.json', autoYes);
+  }
+
+  // Copy tool-policy.json
+  const policyTemplate = path.join(templateDir, 'tool-policy.json');
+  const policyTarget = path.join(geminiDir, 'tool-policy.json');
+  if (fs.existsSync(policyTemplate)) {
+    await copyPath(policyTemplate, policyTarget, 'tool-policy.json', autoYes);
+  }
+
+  console.log(chalk.green('  ✓ Gemini CLI configuration set up'));
+}
+
 async function setupCursor(language, autoYes = false) {
   const cursorRulesPath = path.join(PROJECT_ROOT, '.cursorrules');
   const templatePath = path.join(TEMPLATES_DIR, 'cursor', '.cursorrules');
@@ -903,12 +961,44 @@ async function setupDevFolder(language, isUpdate) {
     console.log(chalk.green('  ✓ Created .dev/ directory'));
   }
 
+  const devTemplatesDir = path.join(TEMPLATES_DIR, 'dev');
+
   // Generate architecture.md (always regenerate to keep it fresh)
   const architecturePath = path.join(devDir, 'architecture.md');
+  const architectureTemplatePath = path.join(devTemplatesDir, 'architecture.md');
   const { generateArchitectureDoc } = require('../lib/architecture-generator');
-  const architectureContent = generateArchitectureDoc(language);
-  fs.writeFileSync(architecturePath, architectureContent);
-  console.log(chalk.green('  ✓ Generated architecture.md'));
+  const sections = [];
+
+  if (fs.existsSync(architectureTemplatePath)) {
+    const templateContent = fs.readFileSync(architectureTemplatePath, 'utf-8').trim();
+    if (templateContent.length) {
+      sections.push(templateContent);
+    }
+  }
+
+  const generatedContent = generateArchitectureDoc(language).trim();
+  if (generatedContent.length) {
+    sections.push(generatedContent);
+  }
+
+  const architectureContent = sections.join('\n\n---\n\n');
+  fs.writeFileSync(architecturePath, architectureContent ? `${architectureContent}\n` : '');
+  const usedTemplate = fs.existsSync(architectureTemplatePath) && sections.length > 1;
+  console.log(chalk.green(usedTemplate
+    ? '  ✓ Synced architecture.md template with auto-generated overview'
+    : '  ✓ Generated architecture.md'));
+
+  // Seed feature.md if it doesn't exist
+  const featureTemplatePath = path.join(devTemplatesDir, 'feature.md');
+  const featurePath = path.join(devDir, 'feature.md');
+  if (fs.existsSync(featureTemplatePath)) {
+    if (!fs.existsSync(featurePath)) {
+      fs.copyFileSync(featureTemplatePath, featurePath);
+      console.log(chalk.green('  ✓ Created feature.md from template'));
+    } else {
+      console.log(chalk.gray('  • Preserved existing feature.md'));
+    }
+  }
 
   // Create todo.md only if it doesn't exist (preserve user's tasks)
   const todoPath = path.join(devDir, 'todo.md');
@@ -929,7 +1019,6 @@ async function setupDevFolder(language, isUpdate) {
   }
 
   // Copy Codex bootstrap instructions (always overwrite to keep in sync)
-  const devTemplatesDir = path.join(TEMPLATES_DIR, 'dev');
   const designSource = path.join(devTemplatesDir, 'DESIGNcode.md');
   if (fs.existsSync(designSource)) {
     const designDest = path.join(devDir, 'DESIGNcode.md');
@@ -1392,6 +1481,13 @@ function printNextSteps(tools, language, isUpdate = false) {
     console.log(chalk.gray('    - /create-error - Create a domain error'));
     console.log(chalk.gray('    - /create-tests - Generate test files'));
     console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos\n'));
+  }
+
+  if (tools.includes('gemini')) {
+    console.log(chalk.white('Gemini CLI:'));
+    console.log(chalk.gray('  • Rules loaded from centralized .dev/rules/'));
+    console.log(chalk.gray('  • Session hooks: Auto-load rules and commit completed todos'));
+    console.log(chalk.gray('  • Tool policy: Includes tool-policy.json for guided tool use\n'));
   }
 
   if (tools.includes('cursor')) {
