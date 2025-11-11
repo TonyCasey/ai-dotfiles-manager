@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Gemini CLI Support**: Added full integration for Gemini CLI, including templates for hooks, commands, and settings. Includes a `tool-policy.json` for explicit, machine-readable tool usage guidance.
 - **Codex Bootstrap File**: `DESIGNcode.md` now syncs into every project's `.dev/` folder and is pinned to the top of the Codex manifest/index so sessions always start with the bootstrap checklist.
 - **Provider Selection "None" Option**: Setup/update prompts include a “None (Codex only)” option so teams running Codex-only flows can skip installing `.claude/`, `.cursor/`, `.kilo/`, or `.roo/` while still refreshing `.dev`.
 - **Managed AGENTS.md Template**: `templates/AGENTS.md` now copies into projects (if missing) before the Codex guide injection so every install has the baseline repository guide.
@@ -14,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Clarified
 - Deprecated provider-specific rule folders and shortcut copies; all installs now read rules from centralized `.dev/rules/` (shared). Base rules are linked from the package (copy fallback on Windows).
 
-## [1.8.1] - 2024-10-25
+## [1.8.1] - 2025-10-25
 
 ### Removed
 - **Redundant Provider Rules Folders**: Removed duplicate rule directories
@@ -33,7 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - ✅ Clearer architecture with no confusion about where rules live
 - ✅ All providers reference `.dev/rules/` consistently
 
-## [1.8.0] - 2024-10-25
+## [1.8.0] - 2025-10-25
 
 ### Added
 - **Claude Code Hooks**: Comprehensive hook system for Claude Code in `templates/claude/hooks/`
@@ -60,7 +61,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - ✅ Optional prompt validation and enhancement
 - ✅ Comprehensive documentation for hook customization
 
-## [1.7.0] - 2024-10-24
+## [1.7.0] - 2025-10-24
 
 ### Changed
 - **Global Slash Commands**: Commands now install to `~/.claude/commands/` (user-level) instead of per-project
@@ -76,21 +77,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - ✅ Updates propagate to all projects automatically
 - ✅ Simpler project configuration
 
-## [1.6.2] - 2024-10-24
+## [1.6.2] - 2025-10-24
 
 ### Fixed
 - **Duplicate Slash Commands**: Removed `allowedCommands` field from settings.json template that was causing commands to be registered twice
   - Commands now load correctly from `commandsDirectory` without duplication
   - `allowedCommands` should only be used when restricting/whitelisting specific commands
 
-## [1.6.1] - 2024-10-24
+## [1.6.1] - 2025-10-24
 
 ### Fixed
 - **Invalid hooks.prePush Configuration**: Removed unsupported `hooks.prePush` from settings.json template
   - Claude Code only supports: PreToolUse, PostToolUse, Notification, UserPromptSubmit, SessionStart, SessionEnd, Stop, SubagentStop, PreCompact
   - Eliminates "Expected array, but received object" validation error on startup
 
-## [1.6.0] - 2024-10-24
+## [1.6.0] - 2025-10-24
 
 ### Fixed
 - **Critical Security Fix**: Shell injection vulnerability in session-end.js
@@ -104,7 +105,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
   - Each project now has its own settings.json instead of sharing global template
   - Prevents accidental global template modifications
 
-## [1.5.4] - 2024-10-24
+## [1.5.4] - 2025-10-24
 
 ### Added
 - **Pre-PR Review Command**: New `/review-changes` command for comprehensive code review before pushing
@@ -140,7 +141,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Examples of critical issues vs warnings
 - User override capabilities documented
 
-## [1.5.3] - 2024-10-24
+## [1.5.3] - 2025-10-24
 
 ### Added
 - **Code Quality Rules Guide**: Added comprehensive `code-quality-rules.md` to shared rules
@@ -163,7 +164,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Included real-world examples of errors caught by each rule
 - Provided setup instructions for IDE integration and git hooks
 
-## [1.5.2] - 2024-10-24
+## [1.5.2] - 2025-10-24
 
 ### Added
 - **ESLint Configuration**: Automatically copies `.eslintrc.json` with TypeScript-specific linting rules
@@ -177,7 +178,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Enhanced console output to show backup file locations
 - Updated documentation to reflect ESLint support and backup feature
 
-## [1.5.1] - 2024-10-24
+## [1.5.1] - 2025-10-24
 
 ### Added
 - **TypeScript Configuration Files**: Automatically copies strict `tsconfig.json` and `tsconfig.test.json` to TypeScript projects during setup
@@ -190,7 +191,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Enhanced documentation to reflect TypeScript configuration feature
 - Updated `printNextSteps()` to inform users about TypeScript config files
 
-## [1.5.0] - 2024-10-24 - Centralized Architecture with Session Hooks
+## [1.5.0] - 2025-10-24 - Centralized Architecture with Session Hooks
 
 - **Added Centralized Rules (.dev/rules/)**: Single source of truth for all AI tools
 - **Implemented Session Hooks**: Automatic start/end actions with todo commit enforcement
@@ -231,7 +232,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0] - 2024-10-21
+## [1.4.0] - 2025-10-21
 
 ### Added
 - **Windows compatibility improvements**: Managed copies used for all base rules (no symlinks)

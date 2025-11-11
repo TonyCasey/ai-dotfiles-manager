@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0.0",
+  "description": "Tool usage policies for Gemini CLI agents within this project.",
+  "policies": {
+    "run_shell_command": {
+      "description": "Policy for executing shell commands.",
+      "allowed": [
+        "git status",
+        "git diff",
+        "npm install",
+        "npm test",
+        "npx tsc",
+        "ls",
+        "cat"
+      ],
+      "disallowed": [
+        "rm -rf *",
+        "git push --force"
+      ],
+      "confirmBeforeExecuting": [
+        "git commit",
+        "git push",
+        "npm publish"
+      ]
+    },
+    "read_file": {
+      "description": "Policy for reading files.",
+      "maxBytes": 1048576,
+      "allowBinary": false
+    },
+    "write_file": {
+      "description": "Policy for writing files.",
+      "allowOverwrite": true,
+      "backupBeforeOverwrite": false
+    }
+  }
+}

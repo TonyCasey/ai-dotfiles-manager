@@ -4,27 +4,25 @@
 [![npm version](https://badge.fury.io/js/ai-dotfiles-manager.svg)](https://www.npmjs.com/package/ai-dotfiles-manager)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Sick of .files folder overload and having to copy and paste tour rules, workflows & commands into different dotfile folders?
-
-```bash
-
-    ├── .claude/              # Claude Code config
-    │   ├── hooks/           # Session automation scripts
-    │   ├── commands/        # Slash commands (global)
-    │   └── settings.json    # Points to ../.dev/rules/
-    ├── .cursorrules           # Cursor config (points to .dev/rules/)
-    ├── .kilocode/           # Kilo Code config (points to .dev/rules/)
-    ├── .roo/                # Roo Code config (points to .dev/rules/)
-    └── .dev/                # Centralized rules and workspace
-        ├── rules/            # Centralized rule repository
-        │   ├── shared/      # Language-agnostic rules (managed copies)
-        │   ├── typescript/   # Language-specific rules (managed copies)
-        │   └── .local/      # Project-specific overrides
-        ├── architecture.md   # Auto-generated project overview
-        └── todo.md           # Developer task list
-```
-
-This package provides **centralized configurations** for AI coding CLI assistants (Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.
+Sick of .files folder overload and having to copy and paste tour rules, workflows & commands into different dotfile folders?
+
+## Repository layout
+
+- `bin/` — CLI entry points (the `bin/setup.js` script and helpers that parse flags and orchestrate installation).
+- `lib/` — pure, testable modules that capture business logic without side effects so they are easy to unit test.
+- `scripts/` — maintenance utilities such as migrations, workspace initializers, and report generators.
+- `templates/` — provider hooks, prompt scaffolds, and rule blueprints (`claude/`, `cursor/`, `kilocode/`, `roo/`, `dev/`, `shared/`, `codex/`, and `languages/`).
+- `resources/` — static assets consumed by the CLI or docs (images, reports, and other reference data).
+- `__tests__/` — Jest suites, fixtures, and helpers that validate the templates, migrations, and library modules.
+- `coverage/` & `dist/` — generated artifacts from tests and builds (ignore in commits).
+- `.dev/` — the developer workspace that AI assistants auto-load; it currently contains:
+  - `architecture.md`, `context-index.md`, `codex-manifest.json`, `README.md`, `DESIGNcode.md`, and optional `todo.md`.
+  - `rules/` (shared, TypeScript, and `.local` overrides) plus `lint/jetbrains-lint.md`.
+- `.claude/` — Claude Code configuration details (`hooks/`, slash command scripts, and `settings.json` that point at `.dev/rules/`).
+- `.github/`, `.tmp/`, `.idea/` — CI metadata, transient workspace files, and IDE settings.
+- Root configs: `package.json`, `package-lock.json`, `tsconfig*.json`, `.eslintrc.js`, `jest.config.js`, `AGENTS.md`, `CHANGELOG.md`, `STATUS.md`, and other project-level docs.
+
+This package provides **centralized configurations** for AI coding CLI assistants (Gemini CLI, Claude Code, Cursor, Kilo Code, and Roo Code) to ensure consistent rules when you switch between each AI.
 
 **Key Innovation**: All rules are centralized in `.dev/rules/` instead of duplicated across provider folders. Claude Code hooks (in `.claude/hooks/`) automatically load rules and commit completed tasks.
 
@@ -57,7 +55,7 @@ A dotfiles manager for your AI tools!
 - **Code Generation**: Step-by-step guides for creating repositories, services, and errors
 - **Slash Commands**: Reusable commands for common development tasks (Claude Code)
 - **Code Review**: Automated architecture violation detection with detailed reports
-- **Multi-Tool Support**: Works with Claude Code, Cursor, Kilo Code, and Roo Code
+- **Multi-Tool Support**: Works with Gemini CLI, Claude Code, Cursor, Kilo Code, and Roo Code
 - **Global Installation**: Install once, use in all your projects
 - **Automatic Todo Commits**: Enforces git commits when tasks are completed
 - **Comprehensive Test Suite**: 78+ tests following SOLID principles and best practices
@@ -228,6 +226,7 @@ All rules are **centralized** in `.dev/rules/` and referenced by all AI tools:
 Each AI tool has minimal configuration pointing to `.dev/rules/` (no per-provider rule folders):
 
 ```bash
+.gemini/settings.json     # Points to ../.dev/rules/
 .claude/settings.json     # Points to ../.dev/rules/
 .cursorrules            # References ../.dev/rules/ files
 .kilocode/config.json     # Points to ../.dev/rules/
@@ -292,6 +291,7 @@ The `.dev/` folder is your **personal developer workspace** that's automatically
 ### Auto-Loading
 
 All `.md` files in `.dev/` are automatically loaded into AI context when you start a session with:
+- Gemini CLI
 - Claude Code
 - Cursor
 - Kilo Code
@@ -441,7 +441,7 @@ ai-dotfiles-manager setup -y
 
 **Interactive mode** prompts will ask:
 - Which language? (auto-detected, or choose manually)
-- Which AI tools? (Claude Code, Cursor, Kilo Code, Roo Code, or ✨ Select All)
+- Which AI tools? (Gemini CLI, Claude Code, Cursor, Kilo Code, Roo Code, or ✨ Select All)
 
 **Non-interactive mode** (`--yes` flag):
 - Uses detected language (defaults to TypeScript if not detected)
