@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Clarified
 - Deprecated provider-specific rule folders and shortcut copies; all installs now read rules from centralized `.dev/rules/` (shared). Base rules are linked from the package (copy fallback on Windows).
 
+### Fixed
+- Resolved “Unknown tool: kilo”/“Unknown tool: roo” errors during `ai-dotfiles-manager update` by wiring dedicated Kilo Code and Roo Code providers into the factory so `.kilocode/` and `.roo/` configs refresh correctly.
+
 ## [1.8.1] - 2025-10-25
 
 ### Removed
