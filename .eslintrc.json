@@ -6,7 +6,9 @@
     "sourceType": "module",
     "project": "./tsconfig.eslint.json"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -24,13 +26,11 @@
     "@typescript-eslint/no-unsafe-member-access": "warn",
     "@typescript-eslint/no-unsafe-call": "warn",
     "@typescript-eslint/no-unsafe-return": "warn",
-
     // Enforce type safety
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "warn",
     "@typescript-eslint/strict-boolean-expressions": "off",
     "@typescript-eslint/no-inferrable-types": "off",
-
     // Prevent unused code
     "@typescript-eslint/no-unused-vars": [
       "error",
@@ -40,17 +40,19 @@
         "destructuredArrayIgnorePattern": "^_"
       }
     ],
-
     // Enforce consistent code style
     "@typescript-eslint/naming-convention": [
       "error",
       {
         "selector": "interface",
-        "format": ["PascalCase"],
-        "prefix": ["I"]
+        "format": [
+          "PascalCase"
+        ],
+        "prefix": [
+          "I"
+        ]
       }
     ],
-
     // Prevent common mistakes
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/await-thenable": "error",
@@ -58,17 +60,20 @@
     "@typescript-eslint/require-await": "warn",
     "@typescript-eslint/prefer-nullish-coalescing": "warn",
     "@typescript-eslint/prefer-optional-chain": "warn",
-
     // Switch case declarations
     "no-case-declarations": "error",
     "prefer-rest-params": "error",
-
     // General rules
-    "no-console": "off"
+    "no-console": "off",
+    "@typescript-eslint/no-require-imports": "off"
   },
   "overrides": [
     {
-      "files": ["**/*.test.ts", "**/*.spec.ts", "**/tests/**/*.ts"],
+      "files": [
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/tests/**/*.ts"
+      ],
       "rules": {
         "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/no-unsafe-assignment": "off",
@@ -77,11 +82,36 @@
         "@typescript-eslint/no-unsafe-return": "off",
         "@typescript-eslint/no-floating-promises": "warn"
       }
+    },
+    {
+      "files": [
+        "**/*.js"
+      ],
+      "rules": {
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/await-thenable": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "destructuredArrayIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_"
+          }
+        ],
+        "no-undef": "error"
+      }
     }
   ],
   "env": {
     "node": true,
-    "es2022": true
+    "es2022": true,
+    "jest": true
   }
 }
-

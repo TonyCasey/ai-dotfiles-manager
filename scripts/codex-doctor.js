@@ -18,7 +18,7 @@ function main() {
     try {
       const m = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
       console.log(`  Load entries: ${Array.isArray(m.load) ? m.load.length : 0}`);
-      (m.load || []).slice(0, 10).forEach(p => console.log(`  - ${p}`));
+      (m.load ?? []).slice(0, 10).forEach(p => console.log(`  - ${p}`));
     } catch (e) {
       console.log(`  Invalid JSON: ${e.message}`);
     }

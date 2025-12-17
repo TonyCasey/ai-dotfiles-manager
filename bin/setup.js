@@ -30,7 +30,7 @@ if (parsed.options.help) {
 const commandType = getCommandType(parsed.command);
 
 // Route to appropriate command handler
-(async () => {
+void (async () => {
   try {
     switch (commandType) {
       case 'setup':
@@ -48,7 +48,7 @@ const commandType = getCommandType(parsed.command);
         break;
 
       case 'review':
-        await executeReview(PROJECT_ROOT, {
+        executeReview(PROJECT_ROOT, {
           detailed: parsed.options.detailed,
           json: parsed.options.json,
           fix: parsed.options.fix,
@@ -56,12 +56,13 @@ const commandType = getCommandType(parsed.command);
         });
         break;
 
-      case 'commit-todo':
+      case 'commit-todo': {
         const subCommand = parsed.commandArgs[0] || 'enforce';
-        await executeCommitTodo(PROJECT_ROOT, {
+        executeCommitTodo(PROJECT_ROOT, {
           noCodexGuide: parsed.options.noCodexGuide,
         }, subCommand);
         break;
+      }
 
       case 'unknown':
         console.log(chalk.red(`Unknown command: ${parsed.command}`));
@@ -69,10 +70,10 @@ const commandType = getCommandType(parsed.command);
         process.exit(1);
         break;
     }
-  } catch (error) {
-    console.error(chalk.red(`\n❌ Error during ${commandType}:`), error);
-    if (error.stack) {
-      console.error(chalk.gray(error.stack));
+  } catch (_error) {
+    console.error(chalk.red(`\n❌ Error during ${commandType}:`), _error);
+    if (_error.stack) {
+      console.error(chalk.gray(_error.stack));
     }
     process.exit(1);
   }

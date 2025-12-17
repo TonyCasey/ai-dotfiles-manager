@@ -25,7 +25,7 @@ function loadSessionState() {
   if (fs.existsSync(SESSION_STATE_PATH)) {
     try {
       return JSON.parse(fs.readFileSync(SESSION_STATE_PATH, 'utf-8'));
-    } catch (error) {
+    } catch (_error) {
       console.log('⚠️  Failed to load session state');
     }
   }
@@ -91,11 +91,11 @@ function commitCompletedTasks(tasks) {
     tasks.forEach(task => console.log(`   ✓ ${task}`));
     return true;
 
-  } catch (error) {
-    if (error.status === 128) {
+  } catch (_error) {
+    if (_error.status === 128) {
       console.log('⚠️  Not a git repository - skipping auto-commit');
     } else {
-      console.log(`⚠️  Failed to commit tasks: ${error.message}`);
+      console.log(`⚠️  Failed to commit tasks: ${_error.message}`);
     }
     return false;
   }
@@ -119,7 +119,7 @@ function updateSessionStats(sessionState) {
   if (fs.existsSync(SESSION_STATS_PATH)) {
     try {
       stats = JSON.parse(fs.readFileSync(SESSION_STATS_PATH, 'utf-8'));
-    } catch (error) {
+    } catch (_error) {
       // Use default stats
     }
   }
@@ -185,8 +185,8 @@ function main() {
 if (require.main === module) {
   try {
     main();
-  } catch (error) {
-    console.error(`❌ Session end failed: ${error.message}`);
+  } catch (_error) {
+    console.error(`❌ Session end failed: ${_error.message}`);
     process.exit(1);
   }
 }

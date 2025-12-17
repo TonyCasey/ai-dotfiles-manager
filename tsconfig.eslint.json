@@ -4,12 +4,13 @@
     "noEmit": true
   },
   "include": [
-    "src/**/*",
-    "tests/**/*",
-    "**/*.ts",
-    "**/*.tsx",
+    "bin/**/*",
+    "lib/**/*",
+    "scripts/**/*",
+    "__tests__/**/*",
+    "templates/**/*.js",
     "**/*.js",
-    "**/*.jsx"
+    "package.json"
   ],
   "exclude": [
     "node_modules",

@@ -2,9 +2,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,8 +17,8 @@
     "sourceMap": true,
     "composite": true,
     "moduleResolution": "node",
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
-
     // Strict checks to prevent errors
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -26,7 +28,6 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": false,
     "exactOptionalPropertyTypes": false,
-
     // Additional strictness
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -35,11 +36,14 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/tests/*": ["tests/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/tests/*": [
+        "__tests__/*"
+      ]
     }
   },
   "exclude": [
@@ -47,6 +51,14 @@
     "dist",
     "**/*.spec.ts",
     "**/*.test.ts"
+  ],
+  "include": [
+    "bin/**/*",
+    "lib/**/*",
+    "scripts/**/*",
+    "templates/**/*.js",
+    "package.json",
+    ".eslintrc.json",
+    "tsconfig.json"
   ]
 }
-

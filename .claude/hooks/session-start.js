@@ -84,7 +84,7 @@ function checkGitStatus() {
     } else {
       console.error('✅ Working directory is clean');
     }
-  } catch (error) {
+  } catch (_error) {
     // Not a git repository or git not available
   }
 }
@@ -95,7 +95,7 @@ function checkGitStatus() {
 function saveSessionState(state) {
   try {
     fs.writeFileSync(SESSION_STATE_PATH, JSON.stringify(state, null, 2));
-  } catch (error) {
+  } catch (_error) {
     console.log('⚠️  Failed to save session state');
   }
 }
@@ -211,8 +211,8 @@ function main() {
 if (require.main === module) {
   try {
     main();
-  } catch (error) {
-    console.error(`❌ Session start failed: ${error.message}`);
+  } catch (_error) {
+    console.error(`❌ Session start failed: ${_error.message}`);
     process.exit(1);
   }
 }

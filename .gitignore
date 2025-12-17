@@ -10,3 +10,6 @@
 .dev/.session-stats.json
 .dev/todo.md
 .dev/architecture.md
+node_modules
+lint_output.txt
+test_output.txt

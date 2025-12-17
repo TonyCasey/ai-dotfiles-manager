@@ -3,7 +3,8 @@
  * Tests Clean Architecture violation detection
  */
 
-const path = require('path');
+// path is not used in this file
+// const path = require('path');
 const CodeReviewer = require('../../scripts/review');
 const { createMockFileSystem, createFsMock } = require('../helpers/fs-mock');
 
@@ -61,17 +62,17 @@ describe('CodeReviewer', () => {
 
     it('should skip .d.ts declaration files', () => {
       // Arrange
-      const projectStructure = {
+      const _projectStructure = {
         src: {
           'index.ts': 'export {}',
           'types.d.ts': 'declare module "test"',
         },
       };
 
-      const fileSystem = createMockFileSystem(projectStructure);
-      const fsMock = createFsMock(fileSystem);
+      const _fileSystem = createMockFileSystem(_projectStructure);
+      const _fsMock = createFsMock(_fileSystem);
 
-      const reviewer = new CodeReviewer('/test-project');
+      const _reviewer = new CodeReviewer('/test-project');
 
       // We need to test the logic directly
       // This is a simplified test focusing on the filter logic
@@ -85,7 +86,7 @@ describe('CodeReviewer', () => {
 
     it('should skip node_modules and dist directories', () => {
       // Arrange
-      const projectStructure = {
+      const _projectStructure = {
         src: {
           'index.ts': 'export {}',
         },

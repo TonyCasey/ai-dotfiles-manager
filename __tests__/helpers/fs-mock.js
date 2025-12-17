@@ -71,7 +71,7 @@ function createFsMock(fileSystem, basePath = '') {
       return fileSystem.has(normalizedPath);
     }),
 
-    readFileSync: jest.fn((path, encoding) => {
+    readFileSync: jest.fn((path, _encoding) => {
       const normalizedPath = normalizePath(path);
       const entry = fileSystem.get(normalizedPath);
       if (!entry || entry.type !== 'file') {
@@ -90,7 +90,7 @@ function createFsMock(fileSystem, basePath = '') {
       });
     }),
 
-    mkdirSync: jest.fn((path, options) => {
+    mkdirSync: jest.fn((path, _options) => {
       const normalizedPath = normalizePath(path);
       fileSystem.set(normalizedPath, {
         type: 'directory',
@@ -100,14 +100,14 @@ function createFsMock(fileSystem, basePath = '') {
       });
     }),
 
-    readdirSync: jest.fn((path, options) => {
+    readdirSync: jest.fn((path, _options) => {
       const normalizedPath = normalizePath(path);
       const entry = fileSystem.get(normalizedPath);
       if (!entry || entry.type !== 'directory') {
         throw new Error(`ENOTDIR: not a directory, scandir '${path}'`);
       }
 
-      if (options?.withFileTypes) {
+      if (_options?.withFileTypes) {
         return entry.children.map(name => ({
           name,
           isDirectory: () => fileSystem.get(`${normalizedPath}/${name}`)?.type === 'directory',
@@ -136,8 +136,6 @@ function createFsMock(fileSystem, basePath = '') {
       return entry;
     }),
 
-    // symlinkSync intentionally omitted (project uses managed copies)
-
     unlinkSync: jest.fn((path) => {
       const normalizedPath = normalizePath(path);
       fileSystem.delete(normalizedPath);
@@ -153,12 +151,12 @@ function createFsMock(fileSystem, basePath = '') {
       fileSystem.set(normalizedDest, { ...entry });
     }),
 
-    rmSync: jest.fn((path, options) => {
+    rmSync: jest.fn((path, _options) => {
       const normalizedPath = normalizePath(path);
       fileSystem.delete(normalizedPath);
     }),
 
-    chmodSync: jest.fn((path, mode) => {
+    chmodSync: jest.fn((_path, _mode) => {
       // Mock implementation - does nothing in tests
     }),
   };

@@ -13,8 +13,8 @@ class CodeReviewer {
   constructor(projectRoot, options = {}) {
     this.projectRoot = projectRoot;
     this.options = {
-      detailed: options.detailed || false,
-      fix: options.fix || false,
+      detailed: options.detailed ?? false,
+      fix: options.fix ?? false,
       format: options.format || 'console', // console, json, html
     };
 
@@ -36,7 +36,7 @@ class CodeReviewer {
   /**
    * Main entry point for code review
    */
-  async analyze() {
+  analyze() {
     console.log('🔍 Starting code review analysis...\n');
 
     // Check if src directory exists
@@ -50,10 +50,10 @@ class CodeReviewer {
     console.log(`📁 Found ${files.length} TypeScript files\n`);
 
     // Step 2: Parse all files and build AST cache
-    await this.parseFiles(files);
+    this.parseFiles(files);
 
     // Step 3: Run all checks
-    await this.runChecks(files);
+    this.runChecks(files);
 
     // Step 4: Generate report
     this.generateReport();
@@ -94,7 +94,7 @@ class CodeReviewer {
   /**
    * Parse all TypeScript files and cache their ASTs
    */
-  async parseFiles(files) {
+  parseFiles(files) {
     console.log('🔧 Parsing TypeScript files...\n');
 
     for (const file of files) {
@@ -117,8 +117,8 @@ class CodeReviewer {
         });
 
         this.stats.filesScanned++;
-      } catch (error) {
-        this.addViolation('error', file, null, 'PARSE_ERROR', `Failed to parse file: ${error.message}`);
+      } catch (_error) {
+        this.addViolation('error', file, null, 'PARSE_ERROR', `Failed to parse file: ${_error.message}`);
       }
     }
   }
@@ -190,8 +190,8 @@ class CodeReviewer {
           line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
           hasConstructor,
           constructor,
-          implements: node.heritageClauses?.find(c => c.token === ts.SyntaxKind.ImplementsKeyword)?.types || [],
-          extends: node.heritageClauses?.find(c => c.token === ts.SyntaxKind.ExtendsKeyword)?.types || [],
+          implements: node.heritageClauses?.find(c => c.token === ts.SyntaxKind.ImplementsKeyword)?.types ?? [],
+          extends: node.heritageClauses?.find(c => c.token === ts.SyntaxKind.ExtendsKeyword)?.types ?? [],
         });
       }
       ts.forEachChild(node, visit);
@@ -214,7 +214,7 @@ class CodeReviewer {
           name,
           node,
           line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-          extends: node.heritageClauses || [],
+          extends: node.heritageClauses ?? [],
         });
       }
       ts.forEachChild(node, visit);
@@ -227,7 +227,7 @@ class CodeReviewer {
   /**
    * Run all architecture checks
    */
-  async runChecks(files) {
+  runChecks(files) {
     console.log('✅ Running architecture checks...\n');
 
     // Check 1: Layer violations

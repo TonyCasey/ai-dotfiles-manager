@@ -80,7 +80,7 @@ function logPrompt(prompt) {
 
   try {
     fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
-  } catch (error) {
+  } catch (_error) {
     // Silently fail if logging doesn't work
   }
 }
@@ -121,8 +121,8 @@ function main() {
 if (require.main === module) {
   try {
     main();
-  } catch (error) {
-    console.error(`❌ Prompt validation failed: ${error.message}`);
+  } catch (_error) {
+    console.error(`❌ Prompt validation failed: ${_error.message}`);
     // Exit with 0 to not block the prompt
     process.exit(0);
   }
